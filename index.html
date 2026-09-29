@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teshe Tech — teach, Build,sele /ተሼ ቲች መማር፣መስራት እና መሸጥ</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+
+<!-- ANIMATED BG -->
+<div class="animated-bg">
+  <span></span><span></span><span></span><span></span>
+</div>
+
+<!-- AUTH OVERLAY -->
+<div id="authOverlay">
+  <div class="auth-box">
+    <div class="auth-glow"></div>
+    <img class="auth-hero" src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&q=80" alt="Learn">
+    <div class="auth-brand-wrap">
+      <svg viewBox="0 0 48 48" width="60" height="60">
+        <defs>
+          <linearGradient id="authGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#a78bfa"/>
+            <stop offset="50%" stop-color="#f472b6"/>
+            <stop offset="100%" stop-color="#fbbf24"/>
+          </linearGradient>
+        </defs>
+        <rect x="4" y="4" width="40" height="40" rx="14" fill="url(#authGrad)"/>
+        <path d="M16 20 L32 20 L32 24 L26 24 L26 34 L22 34 L22 24 L16 24 Z" fill="#fff" opacity="0.95"/>
+        <circle cx="36" cy="14" r="3" fill="#fff"/>
+      </svg>
+      <h1 class="auth-brand">Teshe Tech</h1>
+    </div>
+    <h2 id="overlayTitle">🔐 Welcome Back /እንኳን ደህና መጣችሁ፤</h2>
+    <div class="auth-error" id="overlayError"></div>
+    <input type="email" id="overlayEmail" placeholder="you@example.com">
+    <input type="password" id="overlayPassword" placeholder="Password">
+    <button class="auth-btn" id="overlayAuthBtn">Login/ግባ</button>
+    <div class="toggle-link">
+      <span id="overlayToggleText">No account?/አካዉንት የልዎትም?</span>
+      <a id="overlayToggleLink">Register/ይመዝገቡ</a>
+    </div>
+  </div>
+</div>
+
+<!-- DEPOSIT MODAL -->
+<div class="deposit-modal" id="depositModal">
+  <div class="modal-box">
+    <h3>💰 Complete Payment/ግብይትዎን ይጨርሱ</h3>
+    <p id="modalSub"></p>
+    <div class="payment-box">
+      <div>CBE: <b>1000676405058</b></div>
+      <div>BOA: <b>189018436</b></div>
+      <div>TeleBirr: <b>0928151586</b></div>
+      <div>Name/ስም: <b>Teshome Ayenew/ተሾመ አየነው</b></div>
+    </div>
+    <input type="number" id="depositAmount" placeholder="Amount">
+    <input type="text" id="depositTxn" placeholder="Transaction ID">
+    <div class="modal-actions">
+      <button id="modalConfirm">Confirm/ያረጋግጡ</button>
+      <button id="modalCancel">Cancel/ይተዉት</button>
+    </div>
+  </div>
+</div>
+
+<!-- HEADER -->
+<header>
+  <div class="logo-area">
+    <svg class="brand-svg" viewBox="0 0 48 48" width="36" height="36">
+      <defs>
+        <linearGradient id="brandGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#8b5cf6"/>
+          <stop offset="50%" stop-color="#ec4899"/>
+          <stop offset="100%" stop-color="#fbbf24"/>
+        </linearGradient>
+      </defs>
+      <rect x="4" y="4" width="40" height="40" rx="12" fill="url(#brandGrad)"/>
+      <path d="M16 20 L32 20 L32 24 L26 24 L26 34 L22 34 L22 24 L16 24 Z" fill="#fff" opacity="0.95"/>
+      <circle cx="36" cy="14" r="3" fill="#fff"/>
+    </svg>
+    <span>Teshe's <span class="logo-hl">Tech</span></span>
+  </div>
+  <button class="nav-toggle" id="navToggle">☰</button>
+  <nav class="nav-menu" id="navMenu">
+    <ul>
+      <li><a href="#home" class="active" data-page="home">Home</a></li>
+      <li><a href="#buy" data-page="buy">Buy</a></li>
+      <li><a href="#order" data-page="order">Order</a></li>
+      <li id="adminNavItem" style="display:none;"><a href="#admin" data-page="admin">Admin</a></li>
+      <li><a href="#about" data-page="about">About</a></li>
+      <li><a href="#contact" data-page="contact">Contact</a></li>
+      <li><button id="logoutBtn">Logout</button></li>
+    </ul>
+  </nav>
+</header>
+
+<div class="toast" id="toast"></div>
+
+<main>
+  <!-- ========== HOME ========== -->
+  <div id="page-home" class="product-page active theme-home">
+    <div class="hero-wrap">
+      <img class="hero-image" src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=1200&q=80" alt="Learn At Home">
+      <div class="hero-overlay">
+        <h1 class="hero-title">Welcome To/እንኳን ወደ/ተሼ ቲች <span>Teshe's Tech/በደህና መጡ</span></h1>
+        <p class="tagline">teach/ማስተማር · Build/መስራት እና ·sele/መሸጥ</p>
+      </div>
+    </div>
+
+    <div class="works">
+      <h1 id="startlearn" class="card-purple">🚀 START LEARNING/መማር ይጀምሩ</h1>
+      <h1 id="buyproduct" class="card-teal">🛒 BUY PRODUCTS/የ ሶፍትዌር ዉጤቶችን ይግዙ</h1>
+      <h1 id="orderproducts" class="card-orange">📦 ORDER PRODUCTS የተለያዩ ስራዎችን በፃዝ ያሰሩ</h1>
+    </div>
+
+    <div class="feature-section">
+      <img src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800&q=80" alt="Learn Together">
+      <div class="feature-text">
+        <h2>Learn Together, Grow Together/በጋራ መማር ፣በጋራ ማደግ</h2>
+        <p>Quality courses, educational materials, and products — all in one place./የተታሩ የ ሶፍትዌር ዎጤቶችን፣ትምህርቶችን እዚህ ያገኛሉ፣</p>
+        <ul class="feature-list">
+          <li>💜 Full-stack web development</li>
+          <li>💚 AI &amp; machine learning</li>
+          <li>🧡 Cyber security</li>
+        </ul>
+      </div>
+    </div>
+
+    <h2 class="section-head">⭐ POPULAR COURSES</h2>
+    <div class="cources" id="courseGrid"></div>
+
+    <div class="feature-section reverse">
+      <img src="https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=800&q=80" alt="How it works">
+      <div class="feature-text">
+        <h2>How It Works</h2>
+        <ul class="feature-list">
+          <li>📚 Choose a course → Deposit → Learn/የሚማሩትን መምረት፣ ብር ማስገባት፣መማር</li>
+          <li>🛒 Buy products with transaction ID/ዎጤቶችን መግዛት የባንክ ደረሰኝ በመላችክ ይረጋገጣል፣</li>
+          <li>📦 Order custom software from devs/በፃዝም አዝዘው ማሰራት ይችላሉ፣</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== COURSE DETAIL ========== -->
+  <div id="page-course-detail" class="course-detail theme-home">
+    <button class="back-btn" id="backToCourses">← Back</button>
+    <h2 id="courseDetailTitle"></h2>
+    <div class="course-video-grid" id="courseVideoGrid"></div>
+  </div>
+
+  <!-- ========== BUY ========== -->
+  <div id="page-buy" class="product-page theme-buy">
+    <div class="page-header-wrap">
+      <img class="page-header-img" src="https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=1200&q=80" alt="Buy">
+      <h2 class="page-header-title">🛒 Buy Products/ዉጤቶችን መግዛት</h2>
+    </div>
+    <p class="page-sub">Browse our products and pay with transaction ID/ዉጢትዎን መምረጥ እና ደረሰኝ መላክ፣</p>
+    <div class="product-grid" id="productGrid"></div>
+  </div>
+
+  <!-- ========== ORDER ========== -->
+  <div id="page-order" class="product-page theme-order">
+    <div class="page-header-wrap">
+      <img class="page-header-img" src="https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=1200&q=80" alt="Custom Software">
+      <h2 class="page-header-title">📦 Order Custom Product</h2>
+    </div>
+    <p class="page-sub">Describe what you need and we'll build it for you/ማሰራት የሚፈልጉትን ጊልጽ ሃሳብ ያስቀምጡ</p>
+
+    <div class="feature-section">
+      <img src="https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=800&q=80" alt="Mobile order">
+      <div class="feature-text">
+        <h3>Seamless Experience</h3>
+        <p>Order from any device and track your project in real time./በማንኛዉም መገልገያ ማዘዝ እና በሰአቱ መቀበል ይችላሉ።</p>
+      </div>
+    </div>
+
+    <div class="order-form">
+      <label>Your Name/ስም</label>
+      <input type="text" id="orderName">
+      <label>Your Email/ኢሜል</label>
+      <input type="email" id="orderEmail">
+      <label>Description/የሚፈልጉትን ገለጻ ያድርጉ የቀረዉን ሃሳብ ቴለግራም ያዉሩኝ</label>
+      <textarea id="orderProduct"></textarea>
+      <button class="btn-submit" id="submitOrder">Submit Order/ትዛዝዎን ያረጋግጡ</button>
+    </div>
+  </div>
+
+  <!-- ========== ADMIN ========== -->
+  <div id="page-admin" class="admin-panel theme-admin">
+    <h2>👑 Admin Panel</h2>
+    <div class="admin-tabs">
+      <button class="active" data-tab="courses">📚 Courses/ትምህርት</button>
+      <button data-tab="products">🛒 Products/ዎቴቶች</button>
+      <button data-tab="deposits">💰 Deposits/ብር ግባት</button>
+      <button data-tab="orders">📦 Orders/ት እዛ</button>
+    </div>
+    <div class="admin-tab-content active" id="tab-courses">
+      <div class="admin-box">
+        <input type="text" id="newCourseName" placeholder="Course Name">
+        <input type="number" id="newCoursePrice" placeholder="Price">
+        <select id="newCourseType">
+          <option value="free">Free/ነጻ</option>
+          <option value="sample">Sample/ለሙከራ</option>
+          <option value="locked">Locked/የተቆለፉ</option>
+        </select>
+        <button id="addCourseBtn">Add Course/ትምህርት አስገባ</button>
+      </div>
+      <div id="courseAdminList"></div>
+    </div>
+    <div class="admin-tab-content" id="tab-products">
+      <div class="admin-box">
+        <input type="text" id="newProductName" placeholder="Product Name">
+        <input type="number" id="newProductPrice" placeholder="Price">
+        <input type="text" id="newProductDesc" placeholder="Description">
+        <button id="addProductBtn">Add Product/ዎቴት ጨምር</button>
+      </div>
+      <div id="productAdminList"></div>
+    </div>
+    <div class="admin-tab-content" id="tab-deposits"><div id="depositList"></div></div>
+    <div class="admin-tab-content" id="tab-orders"><div id="orderList"></div></div>
+  </div>
+
+  <!-- ========== ABOUT ========== -->
+  <div id="page-about" class="product-page theme-about">
+    <div class="page-header-wrap">
+      <img class="page-header-img" src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1200&q=80" alt="About">
+      <h2 class="page-header-title">👤 About Teshe Tech/ስለዚህ ድህረ ገጽ</h2>
+    </div>
+    <p class="about-text">
+      Teshome Ayenew — passionate developer and educator building Teshe Tech to help people learn, build, and buy technology solutions.
+      <br> Iam 3rd year computer science student at BAHIR DAR UNIVERSITY, and I love to create software that makes a difference. <br>
+       Teshe Tech is my way of sharing knowledge and empowering others to succeed in the tech world.
+       /ስሜ ተሾመ አየነው እባላለው፣ የተወልድኩት አምራ ክልል ፣ምስራቅ ጎጃም ፣ደባይ ጥላት/ግን ወረዳ ነው <br>
+       አሁን ላይ ባህር ዳር ዩኒቨርሲቲ የ 3ኛ አመት ኮምፑተር ሳይንስ እየተማርኩ እገኛለው <br>
+       እንዲሁም የfullstack webapp እያስተማርኩ እገኛለው፣
+    </p>
+    <div class="feature-section reverse">
+      <img src="https://images.unsplash.com/photo-1563968743333-044cef800494?w=800&q=80" alt="Robotics">
+      <div class="feature-text">
+        <h3>Solve Real-World Problems/አላማችን በ አለም ላይ ያሉ ችግሮችን መፍታት ነው</h3>
+        <p>We don't just teach code — we teach you how to build solutions that matter. <br>/ኮድ መማር ብቻ አይደለም ኢንዴት ችግሮችን መፍታት እንዳለብንም እንማራለን፣</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== CONTACT ========== -->
+  <div id="page-contact" class="product-page theme-contact">
+    <div class="page-header-wrap">
+      <img class="page-header-img" src="https://images.unsplash.com/photo-1516387938699-a93567ec168e?w=1200&q=80" alt="Contact">
+      <h2 class="page-header-title">📬 Contact Us/ያኙን</h2>
+    </div>
+    <p class="page-sub">Connect with us on any platform</p>
+    <div class="contact-grid">
+
+      <a href="https://youtube.com/@teshomeayenew-z4t" target="_blank" class="contact-card c-red">
+        <div class="brand-logo">
+          <svg viewBox="0 0 24 24" width="42" height="42" fill="#FF0000">
+            <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+          </svg>
+        </div>
+        <div class="contact-name">YouTube</div>
+        <div class="contact-detail"></div>
+      </a>
+
+      <a href="https://www.tiktok.com/@_teshe" target="_blank" class="contact-card c-black">
+        <div class="brand-logo">
+          <svg viewBox="0 0 24 24" width="42" height="42" fill="#fff">
+            <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
+          </svg>
+        </div>
+        <div class="contact-name">TikTok</div>
+        <div class="contact-detail"></div>
+      </a>
+
+      <a href="https://www.facebook.com/share/1W4QqjmWh3/" target="_blank" class="contact-card c-blue">
+        <div class="brand-logo">
+          <svg viewBox="0 0 24 24" width="42" height="42" fill="#1877F2">
+            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+          </svg>
+        </div>
+        <div class="contact-name"></div>
+        <div class="contact-detail">Teshe Tech/</div>
+      </a>
+
+      <a href="https://wa.me/251928151586" target="_blank" class="contact-card c-green">
+        <div class="brand-logo">
+          <svg viewBox="0 0 24 24" width="42" height="42" fill="#25D366">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+          </svg>
+        </div>
+        <div class="contact-name">WhatsApp</div>
+        <div class="contact-detail">0928151586</div>
+      </a>
+
+      <a href="mailto:teshomeayenew5@gmail.com" class="contact-card c-mail">
+        <div class="brand-logo">
+          <svg viewBox="0 0 24 24" width="42" height="42" fill="#EA4335">
+            <path d="M24 5.457v13.909c0 .904-.732 1.636-1.636 1.636h-3.819V11.73L12 16.64l-6.545-4.91v9.273H1.636A1.636 1.636 0 0 1 0 19.366V5.457c0-2.023 2.309-3.178 3.927-1.964L5.455 4.64 12 9.548l6.545-4.91 1.528-1.145C21.69 2.28 24 3.434 24 5.457z"/>
+          </svg>
+        </div>
+        <div class="contact-name">Email</div>
+        <div class="contact-detail">teshomeayenew5@gmail.com</div>
+      </a>
+
+      <a href="tel:+251928151586" class="contact-card c-phone">
+        <div class="brand-logo">
+          <svg viewBox="0 0 24 24" width="42" height="42" fill="#22C55E">
+            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+          </svg>
+        </div>
+        <div class="contact-name">Call</div>
+        <div class="contact-detail">0928151586</div>
+      </a>
+
+      <a href="https://github.com/teshe-hard" target="_blank" class="contact-card c-dark">
+        <div class="brand-logo">
+          <svg viewBox="0 0 24 24" width="42" height="42" fill="#fff">
+            <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/>
+          </svg>
+        </div>
+        <div class="contact-name">GitHub</div>
+        <div class="contact-detail"></div>
+      </a>
+      <a href="https://t.me/TE21HUSH" target="_blank" class="contact-card c-telegram">
+        <div class="brand-logo">
+          <svg viewBox="0 0 24 24" width="42" height="42" fill="#fff">
+            <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/>
+          </svg>
+        </div>
+        <div class="contact-name"></div>
+        <div class="contact-detail">@TE21HUSH</div>
+      </a>
+
+    </div>
+  </div>
+</main>
+
+<script src="/js/app.js"></script>
+</body>
+</html>
