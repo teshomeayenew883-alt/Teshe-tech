@@ -2,7 +2,6 @@ const express = require('express');
 const cors = require('cors');
 const multer = require('multer');
 const path = require('path');
-const fs = require('fs');
 const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config();
 
@@ -14,34 +13,15 @@ app.use(cors());
 app.use(express.json({ limit: '20mb' }));
 app.use(express.static('public'));
 
-const uploadDir = path.join(__dirname, 'public', 'uploads');
-if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
-
-// ============ MULTER SETUP ============
-const videoStorage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, uploadDir),
-  filename: (req, file, cb) => {
-    const unique = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, unique + path.extname(file.originalname));
-  }
-});
-const uploadVideo = multer({
-  storage: videoStorage,
-  limits: { fileSize: 500 * 1024 * 1024 },
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith('video/')) cb(null, true);
-    else cb(new Error('Only video files allowed'));
-  }
+// ============ MULTER (Memory Storage — required for Supabase) ============
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 500 * 1024 * 1024 }  // 500 MB
 });
 
-const uploadNoteFile = multer({
-  storage: videoStorage,
-  limits: { fileSize: 50 * 1024 * 1024 },
-  fileFilter: (req, file, cb) => {
-    const allowed = ['application/pdf','application/msword','application/vnd.openxmlformats-officedocument.wordprocessingml.document','text/plain','application/rtf','image/jpeg','image/png','image/webp'];
-    if (allowed.includes(file.mimetype)) cb(null, true);
-    else cb(new Error('Only PDF, DOCX, TXT, RTF, JPG, PNG allowed'));
-  }
+const uploadNote = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 50 * 1024 * 1024 }  // 50 MB
 });
 
 const ADMIN_RESET_CODE = '100510';
@@ -122,15 +102,45 @@ app.delete('/api/password-reset/:id', async (req, res) => {
   res.json({ message: 'Dismissed' });
 });
 
-// ============ UPLOADS ============
-app.post('/api/upload-video', uploadVideo.single('video'), (req, res) => {
+// ============ FILE UPLOADS (Supabase Storage) ============
+app.post('/api/upload-video', upload.single('video'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No video uploaded' });
-  res.json({ url: '/uploads/' + req.file.filename, filename: req.file.filename });
+  try {
+    const filename = `videos/${Date.now()}-${req.file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+    const { error } = await supabase.storage
+      .from('uploads')
+      .upload(filename, req.file.buffer, {
+        contentType: req.file.mimetype,
+        upsert: false
+      });
+    if (error) throw error;
+
+    const { data: urlData } = supabase.storage.from('uploads').getPublicUrl(filename);
+    res.json({ url: urlData.publicUrl, filename });
+  } catch (err) {
+    console.error('Upload error:', err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
-app.post('/api/upload-note', uploadNoteFile.single('notefile'), (req, res) => {
+app.post('/api/upload-note', uploadNote.single('notefile'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
-  res.json({ url: '/uploads/' + req.file.filename, filename: req.file.filename, originalName: req.file.originalname });
+  try {
+    const filename = `notes/${Date.now()}-${req.file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+    const { error } = await supabase.storage
+      .from('uploads')
+      .upload(filename, req.file.buffer, {
+        contentType: req.file.mimetype,
+        upsert: false
+      });
+    if (error) throw error;
+
+    const { data: urlData } = supabase.storage.from('uploads').getPublicUrl(filename);
+    res.json({ url: urlData.publicUrl, filename, originalName: req.file.originalname });
+  } catch (err) {
+    console.error('Upload error:', err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // ============ COURSES ============
@@ -314,4 +324,9 @@ app.post('/api/users/:id/reset-password', async (req, res) => {
   res.json({ message: 'Updated', user: data });
 });
 
-app.listen(PORT, () => console.log(`✅ Server running on http://localhost:${PORT}`));
+// ============ START ============
+if (require.main === module) {
+  app.listen(PORT, () => console.log(`✅ Server running on http://localhost:${PORT}`));
+}
+
+module.exports = app;
