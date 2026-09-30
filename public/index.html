@@ -48,37 +48,37 @@
   </div>
 </div>
 
-<!-- ========== DEPOSIT MODAL ========== -->
+<!-- ========== DEPOSIT MODAL (compact + scrollable) ========== -->
 <div class="deposit-modal" id="depositModal">
   <div class="modal-box">
-    <h3>💰 Complete Payment</h3>
-    <p id="modalSub"></p>
-    <div id="modalRequestType" style="text-align:center; padding:0.6rem; background:#eef2ff; border-radius:12px; font-weight:800; color:#667eea; margin-bottom:1rem;">Course Unlock</div>
+    <h3 style="margin-bottom:0.5rem;">💰 Complete Payment</h3>
+    <p id="modalSub" style="font-size:0.9rem; margin-bottom:0.5rem; text-align:center; color:#6b7280;"></p>
+    <div id="modalRequestType" style="text-align:center; padding:0.5rem; background:#eef2ff; border-radius:12px; font-weight:800; color:#667eea; margin-bottom:0.8rem; font-size:0.9rem;">Course Unlock</div>
 
-    <div style="background:#f9fafb; padding:1rem; border-radius:14px; margin-bottom:1rem; border:2px solid #e5e7eb;">
-      <div style="font-weight:800; color:#667eea; margin-bottom:0.6rem; text-align:center;">💳 Payment Accounts</div>
-      <div style="padding:0.5rem 0; border-bottom:1px solid #e5e7eb;"><b>CBE:</b> 1000676405058</div>
-      <div style="padding:0.5rem 0; border-bottom:1px solid #e5e7eb;"><b>BOA:</b> 189018436</div>
-      <div style="padding:0.5rem 0; border-bottom:1px solid #e5e7eb;"><b>TeleBirr:</b> 0928151586</div>
-      <div style="padding:0.5rem 0;"><b>Account Name:</b> Teshome Ayenew</div>
+    <div style="background:#f9fafb; padding:0.7rem 0.9rem; border-radius:12px; margin-bottom:0.8rem; border:2px solid #e5e7eb; font-size:0.85rem; line-height:1.5;">
+      <div style="font-weight:800; color:#667eea; margin-bottom:0.4rem; text-align:center; font-size:0.9rem;">💳 Payment Accounts</div>
+      <div><b>CBE:</b> 1000676405058</div>
+      <div><b>BOA:</b> 189018436</div>
+      <div><b>TeleBirr:</b> 0928151586</div>
+      <div><b>Name:</b> Teshome Ayenew</div>
     </div>
 
-    <label class="form-label">Amount (Birr)</label>
-    <input type="number" id="depositAmount" placeholder="Amount" class="form-input">
+    <label class="form-label" style="font-size:0.85rem; margin-top:0.3rem;">Amount (Birr)</label>
+    <input type="number" id="depositAmount" placeholder="Amount" class="form-input" style="padding:0.6rem 0.9rem;">
 
-    <label class="form-label">Transaction ID (optional if you upload receipt)</label>
-    <input type="text" id="depositTxn" placeholder="Enter transaction ID" class="form-input">
+    <label class="form-label" style="font-size:0.85rem;">Transaction ID (optional if you upload receipt)</label>
+    <input type="text" id="depositTxn" placeholder="Enter transaction ID" class="form-input" style="padding:0.6rem 0.9rem;">
 
-    <label class="form-label" style="margin-top:0.8rem;">OR Upload Bank Receipt Screenshot</label>
-    <div class="upload-area" id="receiptDropZone" style="padding:1rem;">
-      <p style="margin:0; font-weight:700; color:#667eea; font-size:0.9rem;">📷 Click to upload receipt (JPG, PNG, PDF)</p>
+    <label class="form-label" style="font-size:0.85rem; margin-top:0.6rem;">OR Upload Receipt Screenshot</label>
+    <div class="upload-area" id="receiptDropZone" style="padding:0.8rem;">
+      <p style="margin:0; font-weight:700; color:#667eea; font-size:0.85rem;">📷 Click to upload (JPG, PNG, PDF)</p>
       <input type="file" id="receiptFile" accept=".jpg,.jpeg,.png,.pdf" style="display:none;">
     </div>
-    <p id="receiptName" style="font-size:0.85rem; color:#22c55e; font-weight:700; margin-top:0.4rem;"></p>
+    <p id="receiptName" style="font-size:0.8rem; color:#22c55e; font-weight:700; margin-top:0.3rem;"></p>
 
-    <div class="modal-actions" style="margin-top:1rem;">
-      <button id="modalConfirm">✅ Submit</button>
-      <button id="modalCancel">Cancel</button>
+    <div class="modal-actions" style="display:flex; gap:0.5rem; margin-top:0.8rem;">
+      <button id="modalConfirm" style="flex:1; padding:0.75rem; border:none; border-radius:40px; font-weight:800; color:#fff; background:linear-gradient(135deg,#10b981,#34d399); cursor:pointer;">✅ Submit</button>
+      <button id="modalCancel" style="flex:1; padding:0.75rem; border:none; border-radius:40px; font-weight:800; color:#fff; background:linear-gradient(135deg,#ef4444,#f87171); cursor:pointer;">Cancel</button>
     </div>
   </div>
 </div>

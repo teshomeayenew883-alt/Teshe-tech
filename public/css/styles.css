@@ -346,3 +346,36 @@ body.is-admin #adminNavItem { display: block !important; }
 /* ===== ADMIN SETTINGS ===== */
 #tab-settings .admin-box { background: #f9fafb; border: 2px solid #e5e7eb; border-radius: 16px; padding: 1.2rem; }
 #tab-settings h4 { font-size: 1.1rem; }
+/* ===== FIX: Make deposit modal scrollable ===== */
+.deposit-modal {
+  align-items: flex-start !important;
+  overflow-y: auto !important;
+  padding: 1rem !important;
+}
+.deposit-modal .modal-box {
+  max-height: calc(100vh - 2rem) !important;
+  overflow-y: auto !important;
+  margin: auto;
+}
+.deposit-modal.active {
+  display: flex !important;
+}
+
+/* Sticky action buttons at bottom of modal */
+.deposit-modal .modal-actions {
+  position: sticky;
+  bottom: 0;
+  background: #fff;
+  padding: 0.8rem 0 0.3rem;
+  margin-top: 0.8rem;
+  border-top: 2px solid #f3f4f6;
+  z-index: 5;
+}
+
+/* Mobile: shrink modal padding a bit */
+@media (max-width: 640px) {
+  .deposit-modal .modal-box {
+    padding: 1.2rem !important;
+    max-height: calc(100vh - 1rem) !important;
+  }
+}
