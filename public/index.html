@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teshe Tech — Learn, Build, Buy</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+
+<div class="animated-bg"><span></span><span></span><span></span><span></span><span></span></div>
+
+<!-- AUTH OVERLAY -->
+<div id="authOverlay">
+  <div class="auth-box">
+    <img class="auth-hero" src="/learn-at-home.jpg" alt="Learn">
+    <div class="auth-brand-wrap">
+      <img class="auth-logo-img" src="/logo.jpg" alt="Teshe Tech" onerror="this.style.display='none'">
+      <h1 class="auth-brand">Teshe Tech</h1>
+    </div>
+    <h2 id="overlayTitle">🔐 Welcome Back</h2>
+    <div class="auth-error" id="overlayError"></div>
+    <input type="email" id="overlayEmail" placeholder="you@example.com">
+    <input type="password" id="overlayPassword" placeholder="Password">
+    <button class="auth-btn" id="overlayAuthBtn">Login</button>
+    <div class="auth-links"><a id="forgotPasswordLink">🔑 Forgot Password?</a></div>
+    <div class="toggle-link">
+      <span id="overlayToggleText">No account?</span>
+      <a id="overlayToggleLink">Register</a>
+    </div>
+  </div>
+</div>
+
+<!-- FORGOT PASSWORD MODAL -->
+<div class="deposit-modal" id="forgotModal">
+  <div class="modal-box">
+    <h3>🔑 Reset Password</h3>
+    <p class="modal-sub">Enter your email and we'll notify the admin.</p>
+    <div class="auth-error" id="forgotError"></div>
+    <label class="form-label">Email</label>
+    <input type="email" id="forgotEmail" class="form-input" placeholder="you@example.com">
+    <label class="form-label">Reason (optional)</label>
+    <input type="text" id="forgotReason" class="form-input" placeholder="e.g. I forgot my password">
+    <div class="modal-actions">
+      <button id="forgotSubmit">Send Request</button>
+      <button id="forgotCancel">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- DEPOSIT MODAL -->
+<div class="deposit-modal" id="depositModal">
+  <div class="modal-box">
+    <h3>💰 Complete Payment</h3>
+    <p id="modalSub"></p>
+    <div class="payment-box">
+      <div>CBE: <b>1000676405058</b></div>
+      <div>BOA: <b>189018436</b></div>
+      <div>TeleBirr: <b>0928151586</b></div>
+      <div>Name: <b>Teshome Ayenew</b></div>
+    </div>
+    <input type="number" id="depositAmount" placeholder="Amount" class="form-input">
+    <input type="text" id="depositTxn" placeholder="Transaction ID" class="form-input">
+    <div class="modal-actions">
+      <button id="modalConfirm">Confirm</button>
+      <button id="modalCancel">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- HEADER -->
+<header>
+  <div class="logo-area">
+    <img class="header-logo" src="/logo.jpg" alt="Teshe Tech" onerror="this.style.display='none'">
+    <span>Teshe's <span class="logo-hl">Tech</span></span>
+  </div>
+  <button class="nav-toggle" id="navToggle">☰</button>
+  <nav class="nav-menu" id="navMenu">
+    <ul>
+      <li><a href="#home" class="active" data-page="home">Home</a></li>
+      <li><a href="#buy" data-page="buy">Buy Software</a></li>
+      <li><a href="#order" data-page="order">Order Software</a></li>
+      <li id="adminNavItem" style="display:none;"><a href="#admin" data-page="admin">👑 Admin</a></li>
+      <li><a href="#about" data-page="about">About</a></li>
+      <li><a href="#contact" data-page="contact">Contact</a></li>
+      <li><button id="logoutBtn">Logout</button></li>
+    </ul>
+  </nav>
+</header>
+
+<div class="toast" id="toast"></div>
+
+<main>
+  <!-- HOME -->
+  <div id="page-home" class="product-page active">
+    <div class="hero-wrap">
+      <img class="hero-image" src="/learn-at-home.jpg" alt="Learn At Home">
+      <div class="hero-overlay">
+        <h1 class="hero-title">Welcome To <span>Teshe's Tech</span></h1>
+        <p class="tagline">Learn · Build · Buy</p>
+      </div>
+    </div>
+
+    <div class="works">
+      <h1 id="startlearn" class="card-purple">🚀 START LEARNING</h1>
+      <h1 id="buyproduct" class="card-teal">💻 BUY SOFTWARE</h1>
+      <h1 id="orderproducts" class="card-orange">⚙️ ORDER SOFTWARE</h1>
+    </div>
+
+    <h2 class="section-head">📚 Browse By Category</h2>
+    <p class="page-sub">Click a category to see its sub-courses (HTML, CSS, JS, React, Node.js...)</p>
+    <div class="category-grid" id="categoryGrid"></div>
+
+    <div class="feature-section reverse">
+      <img src="/tech-overlay.jpg" alt="How it works">
+      <div class="feature-text">
+        <h2>How It Works</h2>
+        <ul class="feature-list">
+          <li>📚 Pick a category → Choose sub-course → Learn</li>
+          <li>💻 Buy ready-made software products</li>
+          <li>⚙️ Order custom software from our devs</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- CATEGORY VIEW -->
+  <div id="page-category" class="course-detail">
+    <button class="back-btn" id="backToHome">← Back to Categories</button>
+    <div class="course-header">
+      <h2 id="categoryTitle"></h2>
+      <p id="categoryDesc" class="page-sub"></p>
+    </div>
+    <div id="categoryCoursesGrid"></div>
+  </div>
+
+  <!-- COURSE DETAIL -->
+  <div id="page-course-detail" class="course-detail">
+    <button class="back-btn" id="backToCourses">← Back</button>
+    <h2 id="courseDetailTitle"></h2>
+    <div class="course-video-grid" id="courseVideoGrid"></div>
+  </div>
+
+  <!-- BUY -->
+  <div id="page-buy" class="product-page">
+    <div class="page-header-wrap">
+      <img class="page-header-img" src="/habesha-styles.jpg" alt="Buy Software">
+      <h2 class="page-header-title">💻 Buy Software Products</h2>
+    </div>
+    <p class="page-sub">Ready-made software — websites, apps, tools, scripts &amp; more</p>
+    <div class="product-grid" id="productGrid"></div>
+  </div>
+
+  <!-- ORDER -->
+  <div id="page-order" class="product-page">
+    <div class="page-header-wrap">
+      <img class="page-header-img" src="/custom-software.jpg" alt="Order Software">
+      <h2 class="page-header-title">⚙️ Order Custom Software</h2>
+    </div>
+    <p class="page-sub">Describe your software idea and we'll build it for you</p>
+
+    <div class="feature-section">
+      <img src="/mobile-order.jpg" alt="Mobile order">
+      <div class="feature-text">
+        <h3>Custom Software Development</h3>
+        <p>From web apps to mobile apps, e-commerce to dashboards — we build what you need.</p>
+      </div>
+    </div>
+
+    <div class="order-form">
+      <label>Your Name</label>
+      <input type="text" id="orderName" placeholder="e.g. Teshome Ayenew">
+      <label>Your Email</label>
+      <input type="email" id="orderEmail" placeholder="you@example.com">
+      <label>Software Description</label>
+      <textarea id="orderProduct" placeholder="Describe your software idea..."></textarea>
+      <button class="btn-submit" id="submitOrder">Submit Order Request</button>
+    </div>
+
+    <h2 class="section-head">📬 Contact Us Directly</h2>
+    <div class="contact-grid">
+      <a href="https://t.me/Lucky21_Wheel" target="_blank" class="contact-card c-telegram">
+        <div class="brand-logo"><svg viewBox="0 0 24 24" width="42" height="42" fill="#0088cc"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.161c-.18 1.897-.962 6.502-1.359 8.627-.168.9-.5 1.201-.82 1.23-.697.064-1.226-.461-1.901-.903-1.056-.692-1.653-1.123-2.678-1.799-1.185-.781-.417-1.21.258-1.911.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.015 3.332-1.386 4.025-1.627 4.476-1.635.099-.002.321.023.465.141.144.118.184.278.206.437.022.159-.014.476-.059.659z"/></svg></div>
+        <div class="contact-name">Telegram Channel</div>
+        <div class="contact-detail">@Lucky21_Wheel</div>
+      </a>
+      <a href="https://t.me/TE21HUSH" target="_blank" class="contact-card c-telegram">
+        <div class="brand-logo"><svg viewBox="0 0 24 24" width="42" height="42" fill="#0088cc"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.161c-.18 1.897-.962 6.502-1.359 8.627-.168.9-.5 1.201-.82 1.23-.697.064-1.226-.461-1.901-.903-1.056-.692-1.653-1.123-2.678-1.799-1.185-.781-.417-1.21.258-1.911.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.015 3.332-1.386 4.025-1.627 4.476-1.635.099-.002.321.023.465.141.144.118.184.278.206.437.022.159-.014.476-.059.659z"/></svg></div>
+        <div class="contact-name">Private Telegram</div>
+        <div class="contact-detail">@TE21HUSH</div>
+      </a>
+      <a href="https://wa.me/251928151586" target="_blank" class="contact-card c-green">
+        <div class="brand-logo"><svg viewBox="0 0 24 24" width="42" height="42" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg></div>
+        <div class="contact-name">WhatsApp</div><div class="contact-detail">0928151586</div>
+      </a>
+      <a href="mailto:teshomeayenew5@gmail.com" class="contact-card c-mail">
+        <div class="brand-logo"><svg viewBox="0 0 24 24" width="42" height="42" fill="#EA4335"><path d="M24 5.457v13.909c0 .904-.732 1.636-1.636 1.636h-3.819V11.73L12 16.64l-6.545-4.91v9.273H1.636A1.636 1.636 0 0 1 0 19.366V5.457c0-2.023 2.309-3.178 3.927-1.964L5.455 4.64 12 9.548l6.545-4.91 1.528-1.145C21.69 2.28 24 3.434 24 5.457z"/></svg></div>
+        <div class="contact-name">Email</div><div class="contact-detail">teshomeayenew5@gmail.com</div>
+      </a>
+      <a href="tel:+251928151586" class="contact-card c-phone">
+        <div class="brand-logo"><svg viewBox="0 0 24 24" width="42" height="42" fill="#22C55E"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></div>
+        <div class="contact-name">Call</div><div class="contact-detail">0928151586</div>
+      </a>
+    </div>
+  </div>
+
+  <!-- ADMIN -->
+  <div id="page-admin" class="admin-panel">
+    <h2>👑 Admin Panel</h2>
+    <div class="admin-tabs">
+      <button class="active" data-tab="courses">📚 Courses</button>
+      <button data-tab="products">💻 Software</button>
+      <button data-tab="deposits">💰 Deposits</button>
+      <button data-tab="orders">⚙️ Orders</button>
+      <button data-tab="productReqs">🛍️ Buy Requests</button>
+      <button data-tab="users">👥 Users</button>
+      <button data-tab="resets">🔑 Resets</button>
+      <button data-tab="settings">⚙️ Settings</button>
+    </div>
+
+    <div class="admin-tab-content active" id="tab-courses">
+      <div class="admin-box">
+        <h4 style="color:#667eea; margin-bottom:1rem;">➕ Add New Course</h4>
+        <label class="form-label">1️⃣ Main Category</label>
+        <select id="newCourseCategory" class="form-select">
+          <option value="">-- Choose main category --</option>
+          <option value="fullstack">💻 Full-Stack Development</option>
+          <option value="machine-learning">🤖 Machine Learning</option>
+          <option value="data-science">📊 Data Science</option>
+          <option value="database">🗄️ Database</option>
+          <option value="cyber-security">🔒 Cyber Security</option>
+          <option value="mobile">📱 Mobile Development</option>
+          <option value="devops">⚙️ DevOps</option>
+          <option value="design">🎨 UI/UX Design</option>
+        </select>
+
+        <label class="form-label">2️⃣ Sub-Category</label>
+        <select id="newCourseSubCategory" class="form-select">
+          <option value="">-- Choose main category first --</option>
+        </select>
+
+        <label class="form-label">3️⃣ Content Format</label>
+        <div class="format-toggle">
+          <label class="format-option active" data-format="video"><span>🎥 Video Lesson</span></label>
+          <label class="format-option" data-format="note"><span>📝 Note / Text</span></label>
+        </div>
+
+        <div id="videoInputs" style="margin-top:1rem;">
+          <label class="form-label">Video Source</label>
+          <div class="video-source-toggle">
+            <label class="source-option active" data-source="youtube"><span>▶️ YouTube URL</span></label>
+            <label class="source-option" data-source="file"><span>📁 Upload from folder</span></label>
+          </div>
+          <div id="youtubeInputBox" style="margin-top:0.8rem;">
+            <input type="text" id="newCourseVideoUrl" placeholder="https://www.youtube.com/watch?v=XXXXX" class="form-input">
+          </div>
+          <div id="fileInputBox" style="margin-top:0.8rem; display:none;">
+            <div class="upload-area" id="videoDropZone">
+              <p style="margin:0; font-weight:700; color:#667eea;">📤 Click or drop a video file</p>
+              <p style="margin:0.3rem 0 0; font-size:0.85rem; color:#9ca3af;">MP4, WebM, MOV — max 500 MB</p>
+              <input type="file" id="newCourseVideoFile" accept="video/*" style="display:none;">
+            </div>
+            <p id="selectedFileName" style="margin-top:0.5rem; font-size:0.9rem; color:#667eea; font-weight:700;"></p>
+          </div>
+        </div>
+
+        <div id="noteInputs" style="margin-top:1rem; display:none;">
+          <label class="form-label">Note Type</label>
+          <div class="note-source-toggle">
+            <label class="note-option active" data-notesource="text"><span>✍️ Type Text</span></label>
+            <label class="note-option" data-notesource="file"><span>📁 Upload File</span></label>
+          </div>
+          <div id="noteTextBox" style="margin-top:0.8rem;">
+            <textarea id="newCourseNote" class="form-textarea" placeholder="Write note content..." rows="6"></textarea>
+          </div>
+          <div id="noteFileBox" style="margin-top:0.8rem; display:none;">
+            <div class="upload-area" id="noteDropZone">
+              <p style="margin:0; font-weight:700; color:#667eea;">📄 Click or drop a file</p>
+              <p style="margin:0.3rem 0 0; font-size:0.85rem; color:#9ca3af;">PDF, DOCX, TXT, JPG, PNG — max 50 MB</p>
+              <input type="file" id="newCourseNoteFile" accept=".pdf,.doc,.docx,.txt,.rtf,.jpg,.jpeg,.png,.webp" style="display:none;">
+            </div>
+            <p id="selectedNoteFileName" style="margin-top:0.5rem; font-size:0.9rem; color:#667eea; font-weight:700;"></p>
+          </div>
+        </div>
+
+        <label class="form-label">Course Name</label>
+        <input type="text" id="newCourseName" placeholder="e.g. Introduction to HTML" class="form-input">
+
+        <label class="form-label">Description</label>
+        <input type="text" id="newCourseDesc" placeholder="Short description" class="form-input">
+
+        <div class="form-row">
+          <div>
+            <label class="form-label">Access Type</label>
+            <select id="newCourseType" class="form-select">
+              <option value="free">🆓 Free</option>
+              <option value="sample">📖 Sample</option>
+              <option value="locked">🔒 Locked (Paid)</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label">Price (Birr)</label>
+            <input type="number" id="newCoursePrice" placeholder="0.00" class="form-input" step="0.01">
+          </div>
+        </div>
+
+        <button id="addCourseBtn" class="admin-primary-btn" style="margin-top:1.2rem; width:100%;">➕ Add Course</button>
+        <p id="courseUploadStatus" style="margin-top:0.8rem; text-align:center; font-weight:700;"></p>
+      </div>
+
+      <div class="admin-table-wrap">
+        <h4 style="color:#667eea; margin:1.5rem 0 0.6rem;">📚 All Courses</h4>
+        <table class="admin-table">
+          <thead><tr><th>Name</th><th>Category</th><th>Sub</th><th>Format</th><th>Price</th><th>Type</th><th>Locked</th><th>Actions</th></tr></thead>
+          <tbody id="courseAdminList"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="admin-tab-content" id="tab-products">
+      <div class="admin-box">
+        <h4 style="color:#667eea; margin-bottom:0.8rem;">➕ Add Software Product</h4>
+        <div class="admin-form-group">
+          <input type="text" id="newProductName" placeholder="Name" style="flex:2; min-width:200px;">
+          <input type="number" id="newProductPrice" placeholder="Price" style="width:130px;">
+          <input type="text" id="newProductCategory" placeholder="Category" style="width:150px;">
+        </div>
+        <div class="admin-form-group" style="margin-top:0.6rem;">
+          <input type="text" id="newProductLink" placeholder="Product link (https://...)" style="flex:1; min-width:280px;">
+          <input type="text" id="newProductImage" placeholder="Image URL" style="flex:1; min-width:280px;">
+        </div>
+        <div class="admin-form-group" style="margin-top:0.6rem;">
+          <input type="text" id="newProductDesc" placeholder="Description" style="flex:1; min-width:280px;">
+          <button id="addProductBtn">➕ Add</button>
+        </div>
+      </div>
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead><tr><th>Product</th><th>Price</th><th>Link</th><th>Actions</th></tr></thead>
+          <tbody id="productAdminList"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="admin-tab-content" id="tab-deposits"><div id="depositList"></div></div>
+    <div class="admin-tab-content" id="tab-orders"><div id="orderList"></div></div>
+    <div class="admin-tab-content" id="tab-productReqs"><div id="productReqList"></div></div>
+
+    <div class="admin-tab-content" id="tab-users">
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead><tr><th>Email</th><th>Password</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="userAdminList"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="admin-tab-content" id="tab-resets"><div id="resetList"></div></div>
+
+    <div class="admin-tab-content" id="tab-settings">
+      <div class="admin-box">
+        <h4 style="color:#667eea; margin-bottom:0.8rem;">🔐 Reset My Admin Password</h4>
+        <p style="color:#6b7280; margin-bottom:1rem; font-size:0.9rem;">Enter your private secret code to confirm the change.</p>
+        <div class="admin-form-group">
+          <input type="password" id="adminNewPassword" placeholder="New password" style="flex:2; min-width:220px;">
+          <input type="password" id="adminHiddenCode" placeholder="Secret code" style="width:180px;">
+          <button id="adminResetSelfBtn" style="background:linear-gradient(135deg,#ef4444,#ec4899);">🔐 Reset</button>
+        </div>
+        <p id="adminResetStatus" style="margin-top:0.8rem; font-weight:700;"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ABOUT -->
+  <div id="page-about" class="product-page">
+    <div class="page-header-wrap">
+      <img class="page-header-img" src="/fullstack-builders.jpg" alt="About">
+      <h2 class="page-header-title">👤 About Teshe Tech</h2>
+    </div>
+    <p class="about-text">Teshome Ayenew — passionate developer and educator building Teshe Tech.</p>
+
+    <h2 class="section-head">📄 My CV</h2>
+    <div class="cv-wrap">
+      <img class="cv-image" src="/cvofmy.jpg" alt="CV" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+      <div class="cv-fallback" style="display:none;">📄 CV not uploaded yet</div>
+      <a class="cv-download-btn" href="/cvofmy.jpg" download="Teshome-Ayenew-CV.jpg">⬇️ Download CV</a>
+    </div>
+
+    <div class="feature-section reverse">
+      <img src="/robotics-lab.jpg" alt="Robotics">
+      <div class="feature-text">
+        <h3>Solve Real-World Problems</h3>
+        <p>We don't just teach code — we teach you how to build solutions that matter.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTACT -->
+  <div id="page-contact" class="product-page">
+    <div class="page-header-wrap">
+      <img class="page-header-img" src="/code-overlay.jpg" alt="Contact">
+      <h2 class="page-header-title">📬 Contact Us</h2>
+    </div>
+    <p class="page-sub">Connect with us on any platform</p>
+    <div class="contact-grid">
+      <a href="https://t.me/Lucky21_Wheel" target="_blank" class="contact-card c-telegram">
+        <div class="brand-logo"><svg viewBox="0 0 24 24" width="42" height="42" fill="#0088cc"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.161c-.18 1.897-.962 6.502-1.359 8.627-.168.9-.5 1.201-.82 1.23-.697.064-1.226-.461-1.901-.903-1.056-.692-1.653-1.123-2.678-1.799-1.185-.781-.417-1.21.258-1.911.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.015 3.332-1.386 4.025-1.627 4.476-1.635.099-.002.321.023.465.141.144.118.184.278.206.437.022.159-.014.476-.059.659z"/></svg></div>
+        <div class="contact-name">Telegram Channel</div>
+        <div class="contact-detail">@Lucky21_Wheel</div>
+      </a>
+      <a href="https://t.me/TE21HUSH" target="_blank" class="contact-card c-telegram">
+        <div class="brand-logo"><svg viewBox="0 0 24 24" width="42" height="42" fill="#0088cc"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.161c-.18 1.897-.962 6.502-1.359 8.627-.168.9-.5 1.201-.82 1.23-.697.064-1.226-.461-1.901-.903-1.056-.692-1.653-1.123-2.678-1.799-1.185-.781-.417-1.21.258-1.911.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.015 3.332-1.386 4.025-1.627 4.476-1.635.099-.002.321.023.465.141.144.118.184.278.206.437.022.159-.014.476-.059.659z"/></svg></div>
+        <div class="contact-name">Private Telegram</div>
+        <div class="contact-detail">@TE21HUSH</div>
+      </a>
+      <a href="https://youtube.com/@teshomeayenew-z4t" target="_blank" class="contact-card c-red">
+        <div class="brand-logo"><svg viewBox="0 0 24 24" width="42" height="42" fill="#FF0000"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg></div>
+        <div class="contact-name">YouTube</div><div class="contact-detail">@teshomeayenew-z4t</div>
+      </a>
+      <a href="https://wa.me/251928151586" target="_blank" class="contact-card c-green">
+        <div class="brand-logo"><svg viewBox="0 0 24 24" width="42" height="42" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg></div>
+        <div class="contact-name">WhatsApp</div><div class="contact-detail">0928151586</div>
+      </a>
+      <a href="mailto:teshomeayenew5@gmail.com" class="contact-card c-mail">
+        <div class="brand-logo"><svg viewBox="0 0 24 24" width="42" height="42" fill="#EA4335"><path d="M24 5.457v13.909c0 .904-.732 1.636-1.636 1.636h-3.819V11.73L12 16.64l-6.545-4.91v9.273H1.636A1.636 1.636 0 0 1 0 19.366V5.457c0-2.023 2.309-3.178 3.927-1.964L5.455 4.64 12 9.548l6.545-4.91 1.528-1.145C21.69 2.28 24 3.434 24 5.457z"/></svg></div>
+        <div class="contact-name">Email</div><div class="contact-detail">teshomeayenew5@gmail.com</div>
+      </a>
+      <a href="tel:+251928151586" class="contact-card c-phone">
+        <div class="brand-logo"><svg viewBox="0 0 24 24" width="42" height="42" fill="#22C55E"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></div>
+        <div class="contact-name">Call</div><div class="contact-detail">0928151586</div>
+      </a>
+      <a href="https://github.com/teshe-hard" target="_blank" class="contact-card c-dark">
+        <div class="brand-logo"><svg viewBox="0 0 24 24" width="42" height="42" fill="#fff"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg></div>
+        <div class="contact-name">GitHub</div><div class="contact-detail">teshe-hard</div>
+      </a>
+    </div>
+  </div>
+</main>
+
+<script src="/js/app.js"></script>
+</body>
+</html>
