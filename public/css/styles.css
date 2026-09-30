@@ -337,3 +337,12 @@ body.is-admin #adminNavItem { display: block !important; }
   .page-header-img { height: 200px; }
   .feature-section img { height: 220px; }
 }
+/* ===== INVITE PAGE ===== */
+#page-invite .cv-wrap { max-width: 600px; }
+#page-invite .admin-box { background: #fff; border: 2px solid #e5e7eb; border-radius: 20px; padding: 1.5rem; }
+#page-invite .admin-box h3 { font-size: 1.2rem; margin-bottom: 0.5rem; }
+#referralLink { user-select: all; }
+
+/* ===== ADMIN SETTINGS ===== */
+#tab-settings .admin-box { background: #f9fafb; border: 2px solid #e5e7eb; border-radius: 16px; padding: 1.2rem; }
+#tab-settings h4 { font-size: 1.1rem; }

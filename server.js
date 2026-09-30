@@ -1,7 +1,6 @@
 const express = require('express');
 const cors = require('cors');
 const multer = require('multer');
-const path = require('path');
 const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config();
 
@@ -13,16 +12,8 @@ app.use(cors());
 app.use(express.json({ limit: '20mb' }));
 app.use(express.static('public'));
 
-// ============ MULTER (Memory Storage — required for Supabase) ============
-const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: { fileSize: 500 * 1024 * 1024 }  // 500 MB
-});
-
-const uploadNote = multer({
-  storage: multer.memoryStorage(),
-  limits: { fileSize: 50 * 1024 * 1024 }  // 50 MB
-});
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 500 * 1024 * 1024 } });
+const uploadNote = multer({ storage: multer.memoryStorage(), limits: { fileSize: 50 * 1024 * 1024 } });
 
 const ADMIN_RESET_CODE = '100510';
 const ADMIN_EMAIL = 'teshomeayenew883@gmail.com';
@@ -102,45 +93,44 @@ app.delete('/api/password-reset/:id', async (req, res) => {
   res.json({ message: 'Dismissed' });
 });
 
-// ============ FILE UPLOADS (Supabase Storage) ============
+// ============ FILE UPLOADS ============
 app.post('/api/upload-video', upload.single('video'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No video uploaded' });
   try {
     const filename = `videos/${Date.now()}-${req.file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
-    const { error } = await supabase.storage
-      .from('uploads')
-      .upload(filename, req.file.buffer, {
-        contentType: req.file.mimetype,
-        upsert: false
-      });
+    const { error } = await supabase.storage.from('uploads').upload(filename, req.file.buffer, {
+      contentType: req.file.mimetype, upsert: false
+    });
     if (error) throw error;
-
     const { data: urlData } = supabase.storage.from('uploads').getPublicUrl(filename);
     res.json({ url: urlData.publicUrl, filename });
-  } catch (err) {
-    console.error('Upload error:', err);
-    res.status(500).json({ error: err.message });
-  }
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 app.post('/api/upload-note', uploadNote.single('notefile'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
   try {
     const filename = `notes/${Date.now()}-${req.file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
-    const { error } = await supabase.storage
-      .from('uploads')
-      .upload(filename, req.file.buffer, {
-        contentType: req.file.mimetype,
-        upsert: false
-      });
+    const { error } = await supabase.storage.from('uploads').upload(filename, req.file.buffer, {
+      contentType: req.file.mimetype, upsert: false
+    });
     if (error) throw error;
-
     const { data: urlData } = supabase.storage.from('uploads').getPublicUrl(filename);
     res.json({ url: urlData.publicUrl, filename, originalName: req.file.originalname });
-  } catch (err) {
-    console.error('Upload error:', err);
-    res.status(500).json({ error: err.message });
-  }
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.post('/api/upload-receipt', uploadNote.single('receipt'), async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No receipt uploaded' });
+  try {
+    const filename = `receipts/${Date.now()}-${req.file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+    const { error } = await supabase.storage.from('uploads').upload(filename, req.file.buffer, {
+      contentType: req.file.mimetype, upsert: false
+    });
+    if (error) throw error;
+    const { data: urlData } = supabase.storage.from('uploads').getPublicUrl(filename);
+    res.json({ url: urlData.publicUrl, filename, originalName: req.file.originalname });
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 // ============ COURSES ============
@@ -154,18 +144,12 @@ app.post('/api/courses', async (req, res) => {
   const { name, price, type, format, note_text, video_url, description, course_tag, category, sub_category, note_file_url, note_file_name } = req.body;
   if (!name) return res.status(400).json({ error: 'Name required' });
   const { data, error } = await supabase.from('courses').insert([{
-    name, price: price || 0, type: type || 'locked',
-    format: format || 'video',
-    note_text: note_text || null,
-    video_url: video_url || null,
-    note_file_url: note_file_url || null,
-    note_file_name: note_file_name || null,
-    description: description || null,
-    course_tag: course_tag || null,
-    category: category || null,
-    sub_category: sub_category || null,
-    locked: type === 'locked',
-    locked_for_all: type === 'locked'
+    name, price: price || 0, type: type || 'locked', format: format || 'video',
+    note_text: note_text || null, video_url: video_url || null,
+    note_file_url: note_file_url || null, note_file_name: note_file_name || null,
+    description: description || null, course_tag: course_tag || null,
+    category: category || null, sub_category: sub_category || null,
+    locked: type === 'locked', locked_for_all: type === 'locked'
   }]).select();
   if (error) return res.status(500).json({ error: error.message });
   res.json(data[0]);
@@ -185,8 +169,7 @@ app.delete('/api/courses/:id', async (req, res) => {
 
 app.post('/api/courses/:id/lock-all', async (req, res) => {
   const { locked } = req.body;
-  const { data, error } = await supabase.from('courses')
-    .update({ locked, locked_for_all: locked }).eq('id', req.params.id).select();
+  const { data, error } = await supabase.from('courses').update({ locked, locked_for_all: locked }).eq('id', req.params.id).select();
   if (error) return res.status(500).json({ error: error.message });
   res.json(data[0]);
 });
@@ -195,23 +178,19 @@ app.post('/api/courses/:id/user-access', async (req, res) => {
   const { id } = req.params;
   const { userEmail, hasAccess } = req.body;
   if (!userEmail) return res.status(400).json({ error: 'userEmail required' });
-  const { data: existing } = await supabase.from('user_course_access')
-    .select('*').eq('user_email', userEmail).eq('course_id', id).maybeSingle();
+  const { data: existing } = await supabase.from('user_course_access').select('*').eq('user_email', userEmail).eq('course_id', id).maybeSingle();
   if (existing) {
-    const { data, error } = await supabase.from('user_course_access')
-      .update({ has_access: hasAccess }).eq('id', existing.id).select();
+    const { data, error } = await supabase.from('user_course_access').update({ has_access: hasAccess }).eq('id', existing.id).select();
     if (error) return res.status(500).json({ error: error.message });
     return res.json(data[0]);
   }
-  const { data, error } = await supabase.from('user_course_access')
-    .insert([{ user_email: userEmail, course_id: id, has_access: hasAccess }]).select();
+  const { data, error } = await supabase.from('user_course_access').insert([{ user_email: userEmail, course_id: id, has_access: hasAccess }]).select();
   if (error) return res.status(500).json({ error: error.message });
   res.json(data[0]);
 });
 
 app.get('/api/user-access/:email', async (req, res) => {
-  const { data, error } = await supabase.from('user_course_access')
-    .select('course_id, has_access').eq('user_email', req.params.email);
+  const { data, error } = await supabase.from('user_course_access').select('course_id, has_access').eq('user_email', req.params.email);
   if (error) return res.status(500).json({ error: error.message });
   res.json(data);
 });
@@ -243,8 +222,7 @@ app.delete('/api/products/:id', async (req, res) => {
 // ============ PRODUCT REQUESTS ============
 app.post('/api/product-requests', async (req, res) => {
   const { product_id, product_name, user_email, user_name, message } = req.body;
-  const { data, error } = await supabase.from('product_requests')
-    .insert([{ product_id, product_name, user_email, user_name, message }]).select();
+  const { data, error } = await supabase.from('product_requests').insert([{ product_id, product_name, user_email, user_name, message }]).select();
   if (error) return res.status(500).json({ error: error.message });
   res.json(data[0]);
 });
@@ -255,11 +233,39 @@ app.get('/api/product-requests', async (req, res) => {
   res.json(data);
 });
 
+app.post('/api/product-requests/:id/approve', async (req, res) => {
+  const { id } = req.params;
+  const { comment } = req.body;
+  if (!comment || comment.trim() === '') return res.status(400).json({ error: 'Comment required' });
+  const { data, error } = await supabase.from('product_requests').update({
+    status: 'approved', admin_comment: comment, reviewed_at: new Date().toISOString(), reviewed_by: ADMIN_EMAIL
+  }).eq('id', id).select();
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data[0]);
+});
+
+app.post('/api/product-requests/:id/reject', async (req, res) => {
+  const { id } = req.params;
+  const { comment } = req.body;
+  if (!comment || comment.trim() === '') return res.status(400).json({ error: 'Comment required' });
+  const { data, error } = await supabase.from('product_requests').update({
+    status: 'rejected', admin_comment: comment, reviewed_at: new Date().toISOString(), reviewed_by: ADMIN_EMAIL
+  }).eq('id', id).select();
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data[0]);
+});
+
 // ============ DEPOSITS ============
 app.post('/api/deposits', async (req, res) => {
-  const { email, amount, transactionId, description } = req.body;
-  const { data, error } = await supabase.from('deposits')
-    .insert([{ user_email: email, amount, transaction_id: transactionId, description }]).select();
+  const { email, amount, transactionId, description, request_type, receipt_url, receipt_file_name } = req.body;
+  const { data, error } = await supabase.from('deposits').insert([{
+    user_email: email, amount,
+    transaction_id: transactionId || 'See receipt',
+    description,
+    request_type: request_type || 'Course Unlock',
+    receipt_url: receipt_url || null,
+    receipt_file_name: receipt_file_name || null
+  }]).select();
   if (error) return res.status(500).json({ error: error.message });
   res.json(data[0]);
 });
@@ -275,8 +281,7 @@ app.post('/api/deposits/:id/approve', async (req, res) => {
   const { comment } = req.body;
   if (!comment || comment.trim() === '') return res.status(400).json({ error: 'Comment required' });
   const { data, error } = await supabase.from('deposits').update({
-    status: 'approved', admin_comment: comment,
-    reviewed_at: new Date().toISOString(), reviewed_by: ADMIN_EMAIL
+    status: 'approved', admin_comment: comment, reviewed_at: new Date().toISOString(), reviewed_by: ADMIN_EMAIL
   }).eq('id', id).select();
   if (error) return res.status(500).json({ error: error.message });
   res.json(data[0]);
@@ -287,8 +292,7 @@ app.post('/api/deposits/:id/reject', async (req, res) => {
   const { comment } = req.body;
   if (!comment || comment.trim() === '') return res.status(400).json({ error: 'Comment required' });
   const { data, error } = await supabase.from('deposits').update({
-    status: 'rejected', admin_comment: comment,
-    reviewed_at: new Date().toISOString(), reviewed_by: ADMIN_EMAIL
+    status: 'rejected', admin_comment: comment, reviewed_at: new Date().toISOString(), reviewed_by: ADMIN_EMAIL
   }).eq('id', id).select();
   if (error) return res.status(500).json({ error: error.message });
   res.json(data[0]);
@@ -297,8 +301,7 @@ app.post('/api/deposits/:id/reject', async (req, res) => {
 // ============ ORDERS ============
 app.post('/api/orders', async (req, res) => {
   const { email, name, description } = req.body;
-  const { data, error } = await supabase.from('orders')
-    .insert([{ user_email: email, name, description }]).select();
+  const { data, error } = await supabase.from('orders').insert([{ user_email: email, name, description }]).select();
   if (error) return res.status(500).json({ error: error.message });
   res.json(data[0]);
 });
@@ -309,24 +312,130 @@ app.get('/api/orders', async (req, res) => {
   res.json(data);
 });
 
+app.post('/api/orders/:id/approve', async (req, res) => {
+  const { id } = req.params;
+  const { comment } = req.body;
+  if (!comment || comment.trim() === '') return res.status(400).json({ error: 'Comment required' });
+  const { data, error } = await supabase.from('orders').update({
+    status: 'approved', admin_comment: comment, reviewed_at: new Date().toISOString(), reviewed_by: ADMIN_EMAIL
+  }).eq('id', id).select();
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data[0]);
+});
+
+app.post('/api/orders/:id/reject', async (req, res) => {
+  const { id } = req.params;
+  const { comment } = req.body;
+  if (!comment || comment.trim() === '') return res.status(400).json({ error: 'Comment required' });
+  const { data, error } = await supabase.from('orders').update({
+    status: 'rejected', admin_comment: comment, reviewed_at: new Date().toISOString(), reviewed_by: ADMIN_EMAIL
+  }).eq('id', id).select();
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data[0]);
+});
+
+// ============ SETTINGS ============
+app.get('/api/settings/:key', async (req, res) => {
+  const { data } = await supabase.from('settings').select('setting_value').eq('setting_key', req.params.key).maybeSingle();
+  res.json({ value: data?.setting_value || null });
+});
+
+app.get('/api/settings', async (req, res) => {
+  const { data, error } = await supabase.from('settings').select('*');
+  if (error) return res.status(500).json({ error: error.message });
+  const settings = {};
+  data.forEach(s => { settings[s.setting_key] = s.setting_value; });
+  res.json(settings);
+});
+
+app.post('/api/settings', async (req, res) => {
+  const { key, value } = req.body;
+  if (!key) return res.status(400).json({ error: 'key required' });
+  const { data: existing } = await supabase.from('settings').select('id').eq('setting_key', key).maybeSingle();
+  if (existing) {
+    await supabase.from('settings').update({ setting_value: value, updated_at: new Date().toISOString() }).eq('id', existing.id);
+  } else {
+    await supabase.from('settings').insert([{ setting_key: key, setting_value: value }]);
+  }
+  res.json({ message: 'Saved' });
+});
+
+// ============ REFERRALS ============
+app.post('/api/referrals', async (req, res) => {
+  const { referrer_email, referred_email } = req.body;
+  if (!referrer_email || !referred_email) return res.status(400).json({ error: 'Missing emails' });
+  if (referrer_email === referred_email) return res.status(400).json({ error: 'Cannot refer yourself' });
+
+  const { data: existing } = await supabase.from('referrals').select('id').eq('referred_email', referred_email).maybeSingle();
+  if (existing) return res.json({ message: 'Already referred', alreadyReferred: true });
+
+  await supabase.from('referrals').insert([{ referrer_email, referred_email }]);
+
+  const { data: allRefs } = await supabase.from('referrals').select('id').eq('referrer_email', referrer_email);
+  const count = allRefs?.length || 0;
+
+  const { data: goalSetting } = await supabase.from('settings').select('setting_value').eq('setting_key', 'referral_goal').maybeSingle();
+  const goal = parseInt(goalSetting?.setting_value || '5');
+
+  let awarded = false;
+  if (count >= goal) {
+    const { data: credit } = await supabase.from('free_credits').select('*').eq('user_email', referrer_email).maybeSingle();
+    if (credit) {
+      await supabase.from('free_credits').update({ credits: credit.credits + 1, updated_at: new Date().toISOString() }).eq('id', credit.id);
+    } else {
+      await supabase.from('free_credits').insert([{ user_email: referrer_email, credits: 1 }]);
+    }
+    awarded = true;
+    await supabase.from('referrals').delete().eq('referrer_email', referrer_email);
+  }
+
+  res.json({ message: 'Referral recorded', count, goal, awarded });
+});
+
+app.get('/api/referrals/:email', async (req, res) => {
+  const { data, error } = await supabase.from('referrals').select('*').eq('referrer_email', req.params.email).order('created_at', { ascending: false });
+  if (error) return res.status(500).json({ error: error.message });
+  const { data: credits } = await supabase.from('free_credits').select('credits').eq('user_email', req.params.email).maybeSingle();
+  res.json({ referrals: data || [], count: data?.length || 0, credits: credits?.credits || 0 });
+});
+
+app.post('/api/free-credits/use', async (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ error: 'Email required' });
+  const { data: credit } = await supabase.from('free_credits').select('*').eq('user_email', email).maybeSingle();
+  if (!credit || credit.credits < 1) return res.status(400).json({ error: 'No credits available' });
+  await supabase.from('free_credits').update({ credits: credit.credits - 1, updated_at: new Date().toISOString() }).eq('id', credit.id);
+  res.json({ message: 'Credit used', remaining: credit.credits - 1 });
+});
+
+app.get('/api/free-credits/:email', async (req, res) => {
+  const { data } = await supabase.from('free_credits').select('credits').eq('user_email', req.params.email).maybeSingle();
+  res.json({ credits: data?.credits || 0 });
+});
+
 // ============ USERS ============
 app.get('/api/users', async (req, res) => {
   const { data, error } = await supabase.from('users').select('id, email, password, role, status, referral_code');
   if (error) return res.status(500).json({ error: error.message });
-  res.json(data);
+  // Hide admin password from response
+  const safeData = data.map(u => {
+    if (u.role === 'admin') return { ...u, password: '🔒 Hidden' };
+    return u;
+  });
+  res.json(safeData);
 });
 
 app.post('/api/users/:id/reset-password', async (req, res) => {
   const { newPassword } = req.body;
   if (!newPassword || newPassword.length < 6) return res.status(400).json({ error: 'Password 6+ chars' });
+  const { data: target } = await supabase.from('users').select('role').eq('id', req.params.id).single();
+  if (target?.role === 'admin') return res.status(403).json({ error: '❌ Cannot reset admin password here. Use Settings → Secret code.' });
   const { data, error } = await supabase.from('users').update({ password: newPassword }).eq('id', req.params.id).select().single();
   if (error) return res.status(500).json({ error: error.message });
   res.json({ message: 'Updated', user: data });
 });
 
-// ============ START ============
 if (require.main === module) {
   app.listen(PORT, () => console.log(`✅ Server running on http://localhost:${PORT}`));
 }
-
 module.exports = app;

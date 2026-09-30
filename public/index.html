@@ -10,7 +10,7 @@
 
 <div class="animated-bg"><span></span><span></span><span></span><span></span><span></span></div>
 
-<!-- AUTH OVERLAY -->
+<!-- ========== AUTH OVERLAY ========== -->
 <div id="authOverlay">
   <div class="auth-box">
     <img class="auth-hero" src="/learn-at-home.jpg" alt="Learn">
@@ -31,7 +31,7 @@
   </div>
 </div>
 
-<!-- FORGOT PASSWORD MODAL -->
+<!-- ========== FORGOT PASSWORD MODAL ========== -->
 <div class="deposit-modal" id="forgotModal">
   <div class="modal-box">
     <h3>🔑 Reset Password</h3>
@@ -48,27 +48,42 @@
   </div>
 </div>
 
-<!-- DEPOSIT MODAL -->
+<!-- ========== DEPOSIT MODAL ========== -->
 <div class="deposit-modal" id="depositModal">
   <div class="modal-box">
     <h3>💰 Complete Payment</h3>
     <p id="modalSub"></p>
-    <div class="payment-box">
-      <div>CBE: <b>1000676405058</b></div>
-      <div>BOA: <b>189018436</b></div>
-      <div>TeleBirr: <b>0928151586</b></div>
-      <div>Name: <b>Teshome Ayenew</b></div>
+    <div id="modalRequestType" style="text-align:center; padding:0.6rem; background:#eef2ff; border-radius:12px; font-weight:800; color:#667eea; margin-bottom:1rem;">Course Unlock</div>
+
+    <div style="background:#f9fafb; padding:1rem; border-radius:14px; margin-bottom:1rem; border:2px solid #e5e7eb;">
+      <div style="font-weight:800; color:#667eea; margin-bottom:0.6rem; text-align:center;">💳 Payment Accounts</div>
+      <div style="padding:0.5rem 0; border-bottom:1px solid #e5e7eb;"><b>CBE:</b> 1000676405058</div>
+      <div style="padding:0.5rem 0; border-bottom:1px solid #e5e7eb;"><b>BOA:</b> 189018436</div>
+      <div style="padding:0.5rem 0; border-bottom:1px solid #e5e7eb;"><b>TeleBirr:</b> 0928151586</div>
+      <div style="padding:0.5rem 0;"><b>Account Name:</b> Teshome Ayenew</div>
     </div>
+
+    <label class="form-label">Amount (Birr)</label>
     <input type="number" id="depositAmount" placeholder="Amount" class="form-input">
-    <input type="text" id="depositTxn" placeholder="Transaction ID" class="form-input">
-    <div class="modal-actions">
-      <button id="modalConfirm">Confirm</button>
+
+    <label class="form-label">Transaction ID (optional if you upload receipt)</label>
+    <input type="text" id="depositTxn" placeholder="Enter transaction ID" class="form-input">
+
+    <label class="form-label" style="margin-top:0.8rem;">OR Upload Bank Receipt Screenshot</label>
+    <div class="upload-area" id="receiptDropZone" style="padding:1rem;">
+      <p style="margin:0; font-weight:700; color:#667eea; font-size:0.9rem;">📷 Click to upload receipt (JPG, PNG, PDF)</p>
+      <input type="file" id="receiptFile" accept=".jpg,.jpeg,.png,.pdf" style="display:none;">
+    </div>
+    <p id="receiptName" style="font-size:0.85rem; color:#22c55e; font-weight:700; margin-top:0.4rem;"></p>
+
+    <div class="modal-actions" style="margin-top:1rem;">
+      <button id="modalConfirm">✅ Submit</button>
       <button id="modalCancel">Cancel</button>
     </div>
   </div>
 </div>
 
-<!-- HEADER -->
+<!-- ========== HEADER ========== -->
 <header>
   <div class="logo-area">
     <img class="header-logo" src="/logo.jpg" alt="Teshe Tech" onerror="this.style.display='none'">
@@ -80,6 +95,7 @@
       <li><a href="#home" class="active" data-page="home">Home</a></li>
       <li><a href="#buy" data-page="buy">Buy Software</a></li>
       <li><a href="#order" data-page="order">Order Software</a></li>
+      <li><a href="#invite" data-page="invite">🎁 Invite</a></li>
       <li id="adminNavItem" style="display:none;"><a href="#admin" data-page="admin">👑 Admin</a></li>
       <li><a href="#about" data-page="about">About</a></li>
       <li><a href="#contact" data-page="contact">Contact</a></li>
@@ -91,7 +107,7 @@
 <div class="toast" id="toast"></div>
 
 <main>
-  <!-- HOME -->
+  <!-- ========== HOME ========== -->
   <div id="page-home" class="product-page active">
     <div class="hero-wrap">
       <img class="hero-image" src="/learn-at-home.jpg" alt="Learn At Home">
@@ -124,7 +140,7 @@
     </div>
   </div>
 
-  <!-- CATEGORY VIEW -->
+  <!-- ========== CATEGORY VIEW ========== -->
   <div id="page-category" class="course-detail">
     <button class="back-btn" id="backToHome">← Back to Categories</button>
     <div class="course-header">
@@ -134,14 +150,14 @@
     <div id="categoryCoursesGrid"></div>
   </div>
 
-  <!-- COURSE DETAIL -->
+  <!-- ========== COURSE DETAIL ========== -->
   <div id="page-course-detail" class="course-detail">
     <button class="back-btn" id="backToCourses">← Back</button>
     <h2 id="courseDetailTitle"></h2>
     <div class="course-video-grid" id="courseVideoGrid"></div>
   </div>
 
-  <!-- BUY -->
+  <!-- ========== BUY ========== -->
   <div id="page-buy" class="product-page">
     <div class="page-header-wrap">
       <img class="page-header-img" src="/habesha-styles.jpg" alt="Buy Software">
@@ -151,7 +167,7 @@
     <div class="product-grid" id="productGrid"></div>
   </div>
 
-  <!-- ORDER -->
+  <!-- ========== ORDER ========== -->
   <div id="page-order" class="product-page">
     <div class="page-header-wrap">
       <img class="page-header-img" src="/custom-software.jpg" alt="Order Software">
@@ -181,13 +197,11 @@
     <div class="contact-grid">
       <a href="https://t.me/Lucky21_Wheel" target="_blank" class="contact-card c-telegram">
         <div class="brand-logo"><svg viewBox="0 0 24 24" width="42" height="42" fill="#0088cc"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.161c-.18 1.897-.962 6.502-1.359 8.627-.168.9-.5 1.201-.82 1.23-.697.064-1.226-.461-1.901-.903-1.056-.692-1.653-1.123-2.678-1.799-1.185-.781-.417-1.21.258-1.911.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.015 3.332-1.386 4.025-1.627 4.476-1.635.099-.002.321.023.465.141.144.118.184.278.206.437.022.159-.014.476-.059.659z"/></svg></div>
-        <div class="contact-name">Telegram Channel</div>
-        <div class="contact-detail">@Lucky21_Wheel</div>
+        <div class="contact-name">Telegram Channel</div><div class="contact-detail">@Lucky21_Wheel</div>
       </a>
       <a href="https://t.me/TE21HUSH" target="_blank" class="contact-card c-telegram">
         <div class="brand-logo"><svg viewBox="0 0 24 24" width="42" height="42" fill="#0088cc"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.161c-.18 1.897-.962 6.502-1.359 8.627-.168.9-.5 1.201-.82 1.23-.697.064-1.226-.461-1.901-.903-1.056-.692-1.653-1.123-2.678-1.799-1.185-.781-.417-1.21.258-1.911.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.015 3.332-1.386 4.025-1.627 4.476-1.635.099-.002.321.023.465.141.144.118.184.278.206.437.022.159-.014.476-.059.659z"/></svg></div>
-        <div class="contact-name">Private Telegram</div>
-        <div class="contact-detail">@TE21HUSH</div>
+        <div class="contact-name">Private Telegram</div><div class="contact-detail">@TE21HUSH</div>
       </a>
       <a href="https://wa.me/251928151586" target="_blank" class="contact-card c-green">
         <div class="brand-logo"><svg viewBox="0 0 24 24" width="42" height="42" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg></div>
@@ -204,7 +218,42 @@
     </div>
   </div>
 
-  <!-- ADMIN -->
+  <!-- ========== INVITE / REFERRALS ========== -->
+  <div id="page-invite" class="product-page">
+    <div class="page-header-wrap">
+      <img class="page-header-img" src="/learn-together.jpg" alt="Invite">
+      <h2 class="page-header-title">🎁 Invite Friends, Learn Free</h2>
+    </div>
+    <p class="page-sub">Invite friends — when enough join, you get a <b>FREE course unlock</b>!</p>
+
+    <div class="cv-wrap">
+      <div class="admin-box" style="text-align:center;">
+        <h3 style="color:#667eea; margin-bottom:0.5rem;">Your Referral Link</h3>
+        <div id="referralLink" style="padding:0.9rem; background:#f9fafb; border:2px dashed #c7d2fe; border-radius:12px; word-break:break-all; font-family:monospace; font-size:0.85rem; margin-bottom:0.8rem;">Login to see your link</div>
+        <button onclick="copyReferral()" style="background:linear-gradient(135deg,#667eea,#764ba2); color:#fff; padding:0.7rem 2rem; border:none; border-radius:40px; font-weight:800; cursor:pointer;">📋 Copy Link</button>
+      </div>
+
+      <div class="admin-box" style="text-align:center; margin-top:1rem;">
+        <h3 style="color:#667eea;">Your Progress</h3>
+        <div style="font-size:2rem; font-weight:900; color:#764ba2; margin:0.5rem 0;">
+          <span id="refCount">0</span> / <span id="refGoal">5</span>
+        </div>
+        <div style="background:#e5e7eb; height:12px; border-radius:10px; overflow:hidden; margin:0.5rem 0;">
+          <div id="refProgress" style="height:100%; background:linear-gradient(90deg,#667eea,#764ba2); width:0%; transition:0.4s; border-radius:10px;"></div>
+        </div>
+        <p id="refMessage" style="color:#6b7280; font-size:0.95rem;"></p>
+      </div>
+
+      <div class="admin-box" style="text-align:center; margin-top:1rem; background:linear-gradient(135deg, #d1fae5, #a7f3d0); border:2px solid #10b981;">
+        <h3 style="color:#065f46;">🎉 Free Course Credits</h3>
+        <div style="font-size:3rem; font-weight:900; color:#059669;" id="freeCredits">0</div>
+        <p style="color:#065f46; font-weight:700;">credits available</p>
+        <p style="color:#065f46; font-size:0.85rem; margin-top:0.4rem;">Use a credit when you click "🔒 Locked" course — it will unlock for FREE.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== ADMIN ========== -->
   <div id="page-admin" class="admin-panel">
     <h2>👑 Admin Panel</h2>
     <div class="admin-tabs">
@@ -218,6 +267,7 @@
       <button data-tab="settings">⚙️ Settings</button>
     </div>
 
+    <!-- COURSES TAB -->
     <div class="admin-tab-content active" id="tab-courses">
       <div class="admin-box">
         <h4 style="color:#667eea; margin-bottom:1rem;">➕ Add New Course</h4>
@@ -317,6 +367,7 @@
       </div>
     </div>
 
+    <!-- PRODUCTS TAB -->
     <div class="admin-tab-content" id="tab-products">
       <div class="admin-box">
         <h4 style="color:#667eea; margin-bottom:0.8rem;">➕ Add Software Product</h4>
@@ -342,10 +393,16 @@
       </div>
     </div>
 
+    <!-- DEPOSITS TAB -->
     <div class="admin-tab-content" id="tab-deposits"><div id="depositList"></div></div>
+
+    <!-- ORDERS TAB -->
     <div class="admin-tab-content" id="tab-orders"><div id="orderList"></div></div>
+
+    <!-- PRODUCT REQUESTS TAB -->
     <div class="admin-tab-content" id="tab-productReqs"><div id="productReqList"></div></div>
 
+    <!-- USERS TAB -->
     <div class="admin-tab-content" id="tab-users">
       <div class="admin-table-wrap">
         <table class="admin-table">
@@ -355,9 +412,22 @@
       </div>
     </div>
 
+    <!-- RESETS TAB -->
     <div class="admin-tab-content" id="tab-resets"><div id="resetList"></div></div>
 
+    <!-- SETTINGS TAB -->
     <div class="admin-tab-content" id="tab-settings">
+      <div class="admin-box" style="margin-bottom:1rem;">
+        <h4 style="color:#667eea; margin-bottom:0.8rem;">🎁 Referral Settings</h4>
+        <p style="color:#6b7280; margin-bottom:1rem; font-size:0.9rem;">Set how many friends a user needs to invite to earn 1 free course unlock.</p>
+        <div class="admin-form-group">
+          <label class="form-label" style="margin:0;">Friends needed for 1 free course:</label>
+          <input type="number" id="referralGoalInput" placeholder="5" min="1" style="width:120px;">
+          <button id="saveReferralGoalBtn" style="background:linear-gradient(135deg,#667eea,#764ba2);">💾 Save</button>
+        </div>
+        <p id="referralGoalStatus" style="margin-top:0.5rem; font-weight:700; color:#22c55e;"></p>
+      </div>
+
       <div class="admin-box">
         <h4 style="color:#667eea; margin-bottom:0.8rem;">🔐 Reset My Admin Password</h4>
         <p style="color:#6b7280; margin-bottom:1rem; font-size:0.9rem;">Enter your private secret code to confirm the change.</p>
@@ -371,7 +441,7 @@
     </div>
   </div>
 
-  <!-- ABOUT -->
+  <!-- ========== ABOUT ========== -->
   <div id="page-about" class="product-page">
     <div class="page-header-wrap">
       <img class="page-header-img" src="/fullstack-builders.jpg" alt="About">
@@ -395,7 +465,7 @@
     </div>
   </div>
 
-  <!-- CONTACT -->
+  <!-- ========== CONTACT ========== -->
   <div id="page-contact" class="product-page">
     <div class="page-header-wrap">
       <img class="page-header-img" src="/code-overlay.jpg" alt="Contact">
@@ -405,13 +475,11 @@
     <div class="contact-grid">
       <a href="https://t.me/Lucky21_Wheel" target="_blank" class="contact-card c-telegram">
         <div class="brand-logo"><svg viewBox="0 0 24 24" width="42" height="42" fill="#0088cc"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.161c-.18 1.897-.962 6.502-1.359 8.627-.168.9-.5 1.201-.82 1.23-.697.064-1.226-.461-1.901-.903-1.056-.692-1.653-1.123-2.678-1.799-1.185-.781-.417-1.21.258-1.911.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.015 3.332-1.386 4.025-1.627 4.476-1.635.099-.002.321.023.465.141.144.118.184.278.206.437.022.159-.014.476-.059.659z"/></svg></div>
-        <div class="contact-name">Telegram Channel</div>
-        <div class="contact-detail">@Lucky21_Wheel</div>
+        <div class="contact-name">Telegram Channel</div><div class="contact-detail">@Lucky21_Wheel</div>
       </a>
       <a href="https://t.me/TE21HUSH" target="_blank" class="contact-card c-telegram">
         <div class="brand-logo"><svg viewBox="0 0 24 24" width="42" height="42" fill="#0088cc"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.161c-.18 1.897-.962 6.502-1.359 8.627-.168.9-.5 1.201-.82 1.23-.697.064-1.226-.461-1.901-.903-1.056-.692-1.653-1.123-2.678-1.799-1.185-.781-.417-1.21.258-1.911.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.015 3.332-1.386 4.025-1.627 4.476-1.635.099-.002.321.023.465.141.144.118.184.278.206.437.022.159-.014.476-.059.659z"/></svg></div>
-        <div class="contact-name">Private Telegram</div>
-        <div class="contact-detail">@TE21HUSH</div>
+        <div class="contact-name">Private Telegram</div><div class="contact-detail">@TE21HUSH</div>
       </a>
       <a href="https://youtube.com/@teshomeayenew-z4t" target="_blank" class="contact-card c-red">
         <div class="brand-logo"><svg viewBox="0 0 24 24" width="42" height="42" fill="#FF0000"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg></div>

@@ -5,7 +5,6 @@ let products = [];
 let userAccess = {};
 let isLoginMode = true;
 
-// Auto-detect API URL — works locally AND on Render
 const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
   ? 'http://localhost:5000/api'
   : window.location.origin + '/api';
@@ -40,10 +39,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   setupVideoUpload();
   setupNoteFileUpload();
   setupNoteSourceToggle();
+  setupReceiptUpload();
+  await checkReferralURL();
   await loadData();
   checkAuth();
   updateAdminVisibility();
   handleHash();
+  if (currentUser) {
+    await submitPendingReferral();
+    await loadReferrals();
+  }
 });
 
 function enforceAdminLock() {
@@ -75,7 +80,7 @@ function handleHash() {
     showToast('⚠️ Admin access only');
     return;
   }
-  const allowed = ['home','buy','order','admin','about','contact','category','course-detail'];
+  const allowed = ['home','buy','order','admin','about','contact','category','course-detail','invite'];
   if (!allowed.includes(hash)) return;
   document.querySelectorAll('.product-page, .course-detail').forEach(p => p.classList.remove('active'));
   const target = document.getElementById(`page-${hash}`);
@@ -85,8 +90,79 @@ function handleHash() {
     if (l.dataset.page === hash) l.classList.add('active');
   });
   if (hash === 'admin') loadAdminData();
+  if (hash === 'invite') loadReferrals();
 }
 window.addEventListener('hashchange', handleHash);
+
+async function checkReferralURL() {
+  const params = new URLSearchParams(window.location.search);
+  const refEmail = params.get('ref');
+  if (!refEmail) return;
+  localStorage.setItem('pendingReferrer', refEmail);
+}
+
+async function submitPendingReferral() {
+  const refEmail = localStorage.getItem('pendingReferrer');
+  if (!refEmail || !currentUser) return;
+  if (refEmail === currentUser.email) { localStorage.removeItem('pendingReferrer'); return; }
+  try {
+    const res = await fetch(`${API_URL}/referrals`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ referrer_email: refEmail, referred_email: currentUser.email })
+    });
+    const data = await res.json();
+    if (res.ok && !data.alreadyReferred) showToast('🎉 Referral recorded!');
+    localStorage.removeItem('pendingReferrer');
+  } catch (err) { console.error(err); }
+}
+
+async function loadReferrals() {
+  if (!currentUser) return;
+  try {
+    const [refRes, goalRes] = await Promise.all([
+      fetch(`${API_URL}/referrals/${encodeURIComponent(currentUser.email)}`),
+      fetch(`${API_URL}/settings/referral_goal`)
+    ]);
+    const refData = await refRes.json();
+    const goalData = await goalRes.json();
+    const goal = parseInt(goalData.value || '5');
+
+    const countEl = document.getElementById('refCount');
+    const goalEl = document.getElementById('refGoal');
+    const progressEl = document.getElementById('refProgress');
+    const msgEl = document.getElementById('refMessage');
+    const creditsEl = document.getElementById('freeCredits');
+    const linkEl = document.getElementById('referralLink');
+
+    if (countEl) countEl.textContent = refData.count;
+    if (goalEl) goalEl.textContent = goal;
+    if (creditsEl) creditsEl.textContent = refData.credits || 0;
+    if (progressEl) progressEl.style.width = Math.min((refData.count / goal) * 100, 100) + '%';
+    if (msgEl) {
+      const remaining = goal - refData.count;
+      msgEl.textContent = remaining > 0
+        ? `Invite ${remaining} more friend${remaining > 1 ? 's' : ''} to earn a FREE course!`
+        : `🎉 You've earned a free course unlock!`;
+    }
+    if (linkEl) linkEl.textContent = window.location.origin + '/?ref=' + encodeURIComponent(currentUser.email);
+  } catch (err) { console.error('Referral load error:', err); }
+}
+
+function copyReferral() {
+  const link = document.getElementById('referralLink')?.textContent;
+  if (!link || link === 'Login to see your link') return showToast('⚠️ Login required');
+  navigator.clipboard.writeText(link).then(() => showToast('📋 Link copied!')).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = link;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast('📋 Link copied!');
+  });
+}
+window.copyReferral = copyReferral;
 
 async function loadData() {
   try {
@@ -140,7 +216,9 @@ overlayAuthBtn.addEventListener('click', async () => {
     updateAdminVisibility();
     overlayEmail.value = '';
     overlayPassword.value = '';
+    await submitPendingReferral();
     await loadUserAccess();
+    await loadReferrals();
     await loadData();
   } catch (err) { overlayError.textContent = '❌ Server not running?'; }
 });
@@ -226,7 +304,7 @@ function openCategory(catKey) {
   document.getElementById('categoryDesc').textContent = `${catCourses.length} sub-courses available`;
   const grid = document.getElementById('categoryCoursesGrid');
   if (catCourses.length === 0) {
-    grid.innerHTML = `<p style="text-align:center; color:#6b7280; padding:2rem;">No courses yet. Admin is working on it!</p>`;
+    grid.innerHTML = `<p style="text-align:center; color:#6b7280; padding:2rem;">No courses yet.</p>`;
     return;
   }
   const groups = {};
@@ -296,10 +374,32 @@ async function openCourse(courseName) {
   const course = courses.find(c => c.name === courseName);
   if (!course) return;
   const hasAccess = userHasAccess(course);
+
   if (!hasAccess) {
     if (!currentUser) return showToast('⚠️ Please login first');
+    try {
+      const creditRes = await fetch(`${API_URL}/free-credits/${encodeURIComponent(currentUser.email)}`);
+      const creditData = await creditRes.json();
+      if (creditData.credits > 0) {
+        if (confirm(`🎁 You have ${creditData.credits} free course credit(s)!\n\nUse 1 credit to unlock "${courseName}" for FREE?`)) {
+          await fetch(`${API_URL}/free-credits/use`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: currentUser.email })
+          });
+          await fetch(`${API_URL}/courses/${course.id}/user-access`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userEmail: currentUser.email, hasAccess: true })
+          });
+          showToast('🎉 Unlocked with free credit!');
+          await loadUserAccess();
+          await loadReferrals();
+          return openCourse(courseName);
+        }
+      }
+    } catch (err) {}
     return showDepositModal('Course Unlock', courseName, course.price);
   }
+
   document.querySelectorAll('.product-page, .course-detail').forEach(p => p.classList.remove('active'));
   document.getElementById('page-course-detail').classList.add('active');
   document.getElementById('courseDetailTitle').textContent = course.name;
@@ -314,7 +414,7 @@ async function openCourse(courseName) {
       if (course.type === 'free' || course.type === 'sample') {
         html += `<div style="width:100%; text-align:center; margin-top:1rem;"><button onclick="downloadNote('${course.name.replace(/'/g,"\\'")}')" class="download-btn">⬇️ Download Note</button></div>`;
       } else {
-        html += `<div style="width:100%; text-align:center; margin-top:1rem; color:#9ca3af; font-size:0.9rem;">🔒 Download disabled for locked courses</div>`;
+        html += `<div style="width:100%; text-align:center; margin-top:1rem; color:#9ca3af; font-size:0.9rem;">🔒 Download disabled</div>`;
       }
     }
     if (course.note_file_url) {
@@ -327,14 +427,13 @@ async function openCourse(courseName) {
       if (course.type === 'free' || course.type === 'sample') {
         html += `<a href="${course.note_file_url}" download class="download-btn" style="margin-top:0.5rem;">⬇️ Download File</a>`;
       } else {
-        html += `<div style="color:#9ca3af; font-size:0.9rem;">🔒 Download disabled for locked courses</div>`;
+        html += `<div style="color:#9ca3af; font-size:0.9rem;">🔒 Download disabled</div>`;
       }
       html += `</div>`;
     }
   } else if (course.format === 'video' && course.video_url) {
     let embedUrl = course.video_url;
     if (embedUrl.startsWith('http') && (embedUrl.includes('supabase') || embedUrl.includes('/uploads/'))) {
-      // Supabase or local video — use <video> tag
       html += `<div class="course-video-item" style="max-width:100%;"><video controls style="width:100%; border-radius:12px; background:#000;"><source src="${embedUrl}" type="video/mp4"></video><h4>${course.name}</h4></div>`;
       if (course.type === 'free' || course.type === 'sample') {
         html += `<div style="width:100%; text-align:center; margin-top:1rem;"><a href="${embedUrl}" download class="download-btn">⬇️ Download Video</a></div>`;
@@ -342,7 +441,6 @@ async function openCourse(courseName) {
         html += `<div style="width:100%; text-align:center; margin-top:1rem; color:#9ca3af; font-size:0.9rem;">🔒 Download disabled</div>`;
       }
     } else {
-      // YouTube
       if (embedUrl.includes('watch?v=')) { const id = embedUrl.split('v=')[1]?.split('&')[0]; if (id) embedUrl = 'https://www.youtube.com/embed/' + id; }
       else if (embedUrl.includes('youtu.be/')) { const id = embedUrl.split('youtu.be/')[1]?.split('?')[0]; if (id) embedUrl = 'https://www.youtube.com/embed/' + id; }
       html += `<div class="course-video-item" style="max-width:100%;"><iframe src="${embedUrl}" allowfullscreen></iframe><h4>${course.name}</h4></div>`;
@@ -357,7 +455,7 @@ window.openCourse = openCourse;
 function downloadNote(courseName) {
   const course = courses.find(c => c.name === courseName);
   if (!course || !course.note_text) return;
-  if (course.type !== 'free' && course.type !== 'sample') return showToast('🔒 Only free notes downloadable');
+  if (course.type !== 'free' && course.type !== 'sample') return showToast('🔒 Only free notes');
   const header = `════════════════════════════════════════
    ${course.name}
    Teshe Tech
@@ -367,10 +465,7 @@ function downloadNote(courseName) {
   const a = document.createElement('a');
   a.href = url;
   a.download = course.name.replace(/[^a-z0-9]/gi, '_') + '.txt';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
   showToast('✅ Downloaded!');
 }
 window.downloadNote = downloadNote;
@@ -384,35 +479,92 @@ document.getElementById('backToCourses')?.addEventListener('click', () => {
   }
 });
 
+/* ============ DEPOSIT MODAL ============ */
 function showDepositModal(type, name, price) {
   if (!currentUser) return showToast('⚠️ Login first');
   document.getElementById('modalSub').textContent = `Pay ${price} Birr for "${name}"`;
+  document.getElementById('modalRequestType').textContent = '📌 ' + type;
   document.getElementById('depositAmount').value = price;
+  document.getElementById('depositTxn').value = '';
+  const rf = document.getElementById('receiptFile'); if (rf) rf.value = '';
+  const rn = document.getElementById('receiptName'); if (rn) rn.textContent = '';
   document.getElementById('depositModal').classList.add('active');
 }
+
+function setupReceiptUpload() {
+  const dz = document.getElementById('receiptDropZone');
+  const fi = document.getElementById('receiptFile');
+  const label = document.getElementById('receiptName');
+  if (!dz || !fi) return;
+  dz.addEventListener('click', () => fi.click());
+  fi.addEventListener('change', () => {
+    if (fi.files.length > 0) label.textContent = `✅ ${fi.files[0].name} selected`;
+  });
+}
+
 document.getElementById('modalCancel')?.addEventListener('click', () => document.getElementById('depositModal').classList.remove('active'));
+
 document.getElementById('modalConfirm')?.addEventListener('click', async () => {
   const amount = document.getElementById('depositAmount').value;
-  const txn = document.getElementById('depositTxn').value;
-  if (!txn) return showToast('⚠️ Enter transaction ID');
+  const txn = document.getElementById('depositTxn').value.trim();
+  const requestType = document.getElementById('modalRequestType').textContent.replace('📌 ', '');
+  const receiptInput = document.getElementById('receiptFile');
+  const receiptFile = receiptInput?.files?.[0];
+
+  if (!txn && !receiptFile) return showToast('⚠️ Enter transaction ID OR upload receipt');
+  if (!amount || parseFloat(amount) <= 0) return showToast('⚠️ Enter valid amount');
+
+  let receipt_url = null, receipt_file_name = null;
+
+  if (receiptFile) {
+    const fd = new FormData();
+    fd.append('receipt', receiptFile);
+    try {
+      const up = await fetch(`${API_URL}/upload-receipt`, { method: 'POST', body: fd });
+      const ud = await up.json();
+      if (up.ok) {
+        receipt_url = ud.url;
+        receipt_file_name = ud.originalName;
+      }
+    } catch (err) { console.error('Receipt upload error:', err); }
+  }
+
   const res = await fetch(`${API_URL}/deposits`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: currentUser.email, amount, transactionId: txn, description: document.getElementById('modalSub').textContent })
+    body: JSON.stringify({
+      email: currentUser.email, amount,
+      transactionId: txn || null,
+      description: document.getElementById('modalSub').textContent,
+      request_type: requestType,
+      receipt_url, receipt_file_name
+    })
   });
+
   if (res.ok) {
-    showToast('✅ Payment submitted!');
+    showToast('✅ Request submitted! Admin will review soon.');
     document.getElementById('depositModal').classList.remove('active');
+    document.getElementById('receiptFile').value = '';
+    document.getElementById('receiptName').textContent = '';
+  } else {
+    showToast('❌ Failed to submit');
   }
 });
 
 async function requestBuyProduct(productId, productName) {
   if (!currentUser) return showToast('⚠️ Please login first');
+  const product = products.find(p => p.id === productId);
   const message = prompt(`Send request to buy "${productName}"?\n\nAdd a message (optional):`) || '';
   const res = await fetch(`${API_URL}/product-requests`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ product_id: productId, product_name: productName, user_email: currentUser.email, user_name: currentUser.email.split('@')[0], message })
+    body: JSON.stringify({
+      product_id: productId, product_name: productName,
+      user_email: currentUser.email, user_name: currentUser.email.split('@')[0], message
+    })
   });
-  if (res.ok) showToast('✅ Request sent!');
+  if (res.ok) {
+    showToast('✅ Request sent! Pay via the accounts shown.');
+    showDepositModal('Buy Product', productName, product?.price || 0);
+  }
 }
 window.requestBuyProduct = requestBuyProduct;
 
@@ -426,12 +578,14 @@ document.getElementById('submitOrder')?.addEventListener('click', async () => {
     body: JSON.stringify({ email: currentUser.email, name, description })
   });
   if (res.ok) {
-    showToast('✅ Order submitted!');
+    showToast('✅ Order submitted! Pay via the accounts shown.');
+    showDepositModal('Order Software', description.substring(0, 30), 0);
     document.getElementById('orderName').value = '';
     document.getElementById('orderProduct').value = '';
   }
 });
 
+/* ============ COURSE FORM SETUP ============ */
 function setupCategoryCascade() {
   const catSel = document.getElementById('newCourseCategory');
   const subSel = document.getElementById('newCourseSubCategory');
@@ -494,8 +648,7 @@ function setupVideoUpload() {
   dz.addEventListener('dragover', (e) => { e.preventDefault(); dz.style.borderColor='#667eea'; });
   dz.addEventListener('dragleave', () => { dz.style.borderColor='#c7d2fe'; });
   dz.addEventListener('drop', (e) => {
-    e.preventDefault();
-    dz.style.borderColor='#c7d2fe';
+    e.preventDefault(); dz.style.borderColor='#c7d2fe';
     if (e.dataTransfer.files.length > 0) { fi.files = e.dataTransfer.files; showFileName(e.dataTransfer.files[0], label); }
   });
   fi.addEventListener('change', () => { if (fi.files.length > 0) showFileName(fi.files[0], label); });
@@ -510,8 +663,7 @@ function setupNoteFileUpload() {
   dz.addEventListener('dragover', (e) => { e.preventDefault(); dz.style.borderColor='#667eea'; });
   dz.addEventListener('dragleave', () => { dz.style.borderColor='#c7d2fe'; });
   dz.addEventListener('drop', (e) => {
-    e.preventDefault();
-    dz.style.borderColor='#c7d2fe';
+    e.preventDefault(); dz.style.borderColor='#c7d2fe';
     if (e.dataTransfer.files.length > 0) { fi.files = e.dataTransfer.files; showFileName(e.dataTransfer.files[0], label); }
   });
   fi.addEventListener('change', () => { if (fi.files.length > 0) showFileName(fi.files[0], label); });
@@ -523,6 +675,7 @@ function showFileName(file, label) {
   label.textContent = `✅ ${file.name} (${size} MB)`;
 }
 
+/* ============ ADD COURSE ============ */
 document.getElementById('addCourseBtn')?.addEventListener('click', async () => {
   if (!currentUser || currentUser.role !== 'admin') return;
   const category = document.getElementById('newCourseCategory').value;
@@ -631,8 +784,10 @@ document.getElementById('addProductBtn')?.addEventListener('click', async () => 
   }
 });
 
+/* ============ ADMIN DATA ============ */
 async function loadAdminData() {
   if (!currentUser || currentUser.role !== 'admin') return;
+  loadReferralGoal();
   try {
     const [dR,oR,cR,pR,uR,rR,prR] = await Promise.all([
       fetch(`${API_URL}/deposits`), fetch(`${API_URL}/orders`), fetch(`${API_URL}/courses`),
@@ -641,45 +796,85 @@ async function loadAdminData() {
     ]);
     const [dD,oD,cD,pD,uD,rD,prD] = await Promise.all([dR.json(),oR.json(),cR.json(),pR.json(),uR.json(),rR.json(),prR.json()]);
 
+    // DEPOSITS with request type + receipt preview
     const dl = document.getElementById('depositList');
     if (dl) {
-      dl.innerHTML = dD.length === 0 ? '<p style="color:#6b7280;">No deposits yet.</p>' :
+      dl.innerHTML = dD.length === 0 ? '<p style="color:#6b7280;">No requests yet.</p>' :
         dD.map(d => {
           const badge = d.status==='approved' ? '<span style="background:#22c55e;color:#fff;padding:0.15rem 0.6rem;border-radius:12px;font-size:0.75rem;">✅ Approved</span>' :
             d.status==='rejected' ? '<span style="background:#ef4444;color:#fff;padding:0.15rem 0.6rem;border-radius:12px;font-size:0.75rem;">❌ Rejected</span>' :
             '<span style="background:#f59e0b;color:#fff;padding:0.15rem 0.6rem;border-radius:12px;font-size:0.75rem;">⏳ Pending</span>';
+          const isImage = d.receipt_url && /\.(jpg|jpeg|png|webp)$/i.test(d.receipt_url);
           return `<div style="background:#f9fafb;padding:1rem;border-radius:14px;margin-bottom:0.8rem;border-left:4px solid #f59e0b;">
-            <div><b style="color:#764ba2;">${d.user_email}</b> ${badge}</div>
-            <div style="margin-top:0.4rem;">Amount: <b>${d.amount} Birr</b> · TXN: <b>${d.transaction_id}</b></div>
-            <div style="color:#6b7280;font-size:0.9rem;margin-top:0.3rem;">${d.description||''}</div>
-            ${d.admin_comment ? `<div style="margin-top:0.4rem;padding:0.5rem;background:#fff;border-radius:8px;border-left:3px solid #667eea;"><b>Comment:</b> ${d.admin_comment}</div>` : ''}
-            ${d.status==='pending' ? `<div style="margin-top:0.6rem;display:flex;gap:0.5rem;flex-wrap:wrap;">
-              <input type="text" id="depositComment-${d.id}" placeholder="Comment (required)" style="flex:1;min-width:200px;padding:0.5rem;border-radius:10px;border:2px solid #e5e7eb;">
-              <button onclick="approveDeposit(${d.id})" style="padding:0.5rem 1rem;border-radius:20px;border:none;background:#22c55e;color:#fff;font-weight:700;">✅ Approve</button>
-              <button onclick="rejectDeposit(${d.id})" style="padding:0.5rem 1rem;border-radius:20px;border:none;background:#ef4444;color:#fff;font-weight:700;">❌ Reject</button>
+            <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;">
+              <div><b style="color:#764ba2;">${d.user_email}</b> ${badge}</div>
+              <div style="background:#eef2ff; color:#667eea; padding:0.2rem 0.7rem; border-radius:12px; font-size:0.75rem; font-weight:800;">📌 ${d.request_type || 'Course Unlock'}</div>
+            </div>
+            <div style="margin-top:0.5rem; font-size:0.95rem;"><b>Amount:</b> ${d.amount} Birr</div>
+            <div style="margin-top:0.3rem; font-size:0.95rem;"><b>Transaction ID:</b> ${d.transaction_id || '(see receipt)'}</div>
+            <div style="color:#6b7280; font-size:0.85rem; margin-top:0.3rem;">${d.description || ''}</div>
+            ${d.receipt_url ? `
+              <div style="margin-top:0.6rem;">
+                <div style="font-size:0.85rem; color:#6b7280; margin-bottom:0.3rem;"><b>Receipt:</b> ${d.receipt_file_name || 'Uploaded'}</div>
+                ${isImage
+                  ? `<img src="${d.receipt_url}" alt="Receipt" style="max-width:220px; border-radius:12px; border:2px solid #e5e7eb; cursor:pointer;" onclick="window.open('${d.receipt_url}','_blank')">`
+                  : `<a href="${d.receipt_url}" target="_blank" style="display:inline-block; padding:0.5rem 1rem; background:#eef2ff; border-radius:20px; color:#667eea; font-weight:700; font-size:0.85rem;">📄 View Receipt</a>`
+                }
+              </div>
+            ` : ''}
+            ${d.admin_comment ? `<div style="margin-top:0.5rem; padding:0.5rem; background:#fff; border-radius:8px; border-left:3px solid #667eea;"><b>Your comment:</b> ${d.admin_comment}</div>` : ''}
+            ${d.status==='pending' || !d.status ? `<div style="margin-top:0.6rem; display:flex; gap:0.5rem; flex-wrap:wrap;">
+              <input type="text" id="depositComment-${d.id}" placeholder="Comment (required)" style="flex:1; min-width:200px; padding:0.5rem; border-radius:10px; border:2px solid #e5e7eb;">
+              <button onclick="approveDeposit(${d.id})" style="padding:0.5rem 1rem; border-radius:20px; border:none; background:#22c55e; color:#fff; font-weight:700; cursor:pointer;">✅ Approve</button>
+              <button onclick="rejectDeposit(${d.id})" style="padding:0.5rem 1rem; border-radius:20px; border:none; background:#ef4444; color:#fff; font-weight:700; cursor:pointer;">❌ Reject</button>
             </div>` : ''}
           </div>`;
         }).join('');
     }
 
+    // ORDERS
     const ol = document.getElementById('orderList');
     if (ol) {
       ol.innerHTML = oD.length === 0 ? '<p style="color:#6b7280;">No orders yet.</p>' :
-        oD.map(o => `<div style="background:#f9fafb;padding:1rem;border-radius:14px;margin-bottom:0.6rem;border-left:4px solid #06b6d4;">
-          <b style="color:#764ba2;">${o.name||'Unknown'}</b> (${o.user_email})
-          <div style="margin-top:0.4rem;color:#374151;">${o.description}</div>
-        </div>`).join('');
+        oD.map(o => {
+          const badge = o.status==='approved' ? '<span style="background:#22c55e;color:#fff;padding:0.15rem 0.6rem;border-radius:12px;font-size:0.75rem;">✅ Approved</span>' :
+            o.status==='rejected' ? '<span style="background:#ef4444;color:#fff;padding:0.15rem 0.6rem;border-radius:12px;font-size:0.75rem;">❌ Rejected</span>' :
+            '<span style="background:#f59e0b;color:#fff;padding:0.15rem 0.6rem;border-radius:12px;font-size:0.75rem;">⏳ Pending</span>';
+          return `<div style="background:#f9fafb;padding:1rem;border-radius:14px;margin-bottom:0.6rem;border-left:4px solid #06b6d4;">
+            <b style="color:#764ba2;">${o.name||'Unknown'}</b> (${o.user_email}) ${badge}
+            <div style="margin-top:0.4rem;color:#374151;">${o.description}</div>
+            ${o.admin_comment ? `<div style="margin-top:0.4rem;padding:0.5rem;background:#fff;border-radius:8px;border-left:3px solid #667eea;"><b>Comment:</b> ${o.admin_comment}</div>` : ''}
+            ${o.status==='pending' || !o.status ? `<div style="margin-top:0.6rem;display:flex;gap:0.5rem;flex-wrap:wrap;">
+              <input type="text" id="orderComment-${o.id}" placeholder="Comment (required)" style="flex:1;min-width:200px;padding:0.5rem;border-radius:10px;border:2px solid #e5e7eb;">
+              <button onclick="approveOrder(${o.id})" style="padding:0.5rem 1rem;border-radius:20px;border:none;background:#22c55e;color:#fff;font-weight:700;cursor:pointer;">✅ Approve</button>
+              <button onclick="rejectOrder(${o.id})" style="padding:0.5rem 1rem;border-radius:20px;border:none;background:#ef4444;color:#fff;font-weight:700;cursor:pointer;">❌ Reject</button>
+            </div>` : ''}
+          </div>`;
+        }).join('');
     }
 
+    // PRODUCT REQUESTS
     const prl = document.getElementById('productReqList');
     if (prl) {
       prl.innerHTML = prD.length === 0 ? '<p style="color:#6b7280;">No product requests yet.</p>' :
-        prD.map(r => `<div style="background:#f9fafb;padding:1rem;border-radius:14px;margin-bottom:0.6rem;border-left:4px solid #ec4899;">
-          <b style="color:#764ba2;">${r.user_email}</b> wants <b>${r.product_name}</b>
-          ${r.message ? `<div style="margin-top:0.4rem;color:#374151;">"${r.message}"</div>` : ''}
-        </div>`).join('');
+        prD.map(r => {
+          const badge = r.status==='approved' ? '<span style="background:#22c55e;color:#fff;padding:0.15rem 0.6rem;border-radius:12px;font-size:0.75rem;">✅ Approved</span>' :
+            r.status==='rejected' ? '<span style="background:#ef4444;color:#fff;padding:0.15rem 0.6rem;border-radius:12px;font-size:0.75rem;">❌ Rejected</span>' :
+            '<span style="background:#f59e0b;color:#fff;padding:0.15rem 0.6rem;border-radius:12px;font-size:0.75rem;">⏳ Pending</span>';
+          return `<div style="background:#f9fafb;padding:1rem;border-radius:14px;margin-bottom:0.6rem;border-left:4px solid #ec4899;">
+            <b style="color:#764ba2;">${r.user_email}</b> wants <b>${r.product_name}</b> ${badge}
+            ${r.message ? `<div style="margin-top:0.4rem;color:#374151;">"${r.message}"</div>` : ''}
+            ${r.admin_comment ? `<div style="margin-top:0.4rem;padding:0.5rem;background:#fff;border-radius:8px;border-left:3px solid #667eea;"><b>Comment:</b> ${r.admin_comment}</div>` : ''}
+            ${r.status==='pending' || !r.status ? `<div style="margin-top:0.6rem;display:flex;gap:0.5rem;flex-wrap:wrap;">
+              <input type="text" id="prodReqComment-${r.id}" placeholder="Comment (required)" style="flex:1;min-width:200px;padding:0.5rem;border-radius:10px;border:2px solid #e5e7eb;">
+              <button onclick="approveProductRequest(${r.id})" style="padding:0.5rem 1rem;border-radius:20px;border:none;background:#22c55e;color:#fff;font-weight:700;cursor:pointer;">✅ Approve</button>
+              <button onclick="rejectProductRequest(${r.id})" style="padding:0.5rem 1rem;border-radius:20px;border:none;background:#ef4444;color:#fff;font-weight:700;cursor:pointer;">❌ Reject</button>
+            </div>` : ''}
+          </div>`;
+        }).join('');
     }
 
+    // COURSES
     const cal = document.getElementById('courseAdminList');
     if (cal) {
       cal.innerHTML = cD.length === 0 ? '<tr><td colspan="8" style="text-align:center;color:#6b7280;">No courses yet.</td></tr>' :
@@ -701,6 +896,7 @@ async function loadAdminData() {
         }).join('');
     }
 
+    // PRODUCTS
     const pal = document.getElementById('productAdminList');
     if (pal) {
       pal.innerHTML = pD.length === 0 ? '<tr><td colspan="4" style="text-align:center;color:#6b7280;">No products yet.</td></tr>' :
@@ -711,18 +907,27 @@ async function loadAdminData() {
         </tr>`).join('');
     }
 
+    // USERS — HIDE admin password
     const ual = document.getElementById('userAdminList');
     if (ual) {
       ual.innerHTML = uD.length === 0 ? '<tr><td colspan="5" style="text-align:center;color:#6b7280;">No users yet.</td></tr>' :
-        uD.map(u => `<tr>
-          <td>${u.email}</td>
-          <td><code style="background:#f3f4f6;padding:0.2rem 0.5rem;border-radius:6px;">${u.password}</code></td>
-          <td>${u.role==='admin'?'👑 Admin':'👤 User'}</td>
-          <td>${u.status==='banned'?'🚫 Banned':'✅ Active'}</td>
-          <td><button onclick="adminResetUserPassword(${u.id}, '${u.email}')" style="background:#667eea;color:#fff;padding:0.35rem 0.7rem;border:none;border-radius:16px;font-size:0.75rem;font-weight:700;">🔄 Reset</button></td>
-        </tr>`).join('');
+        uD.map(u => {
+          const isAdminUser = u.role === 'admin';
+          const pwdDisplay = isAdminUser
+            ? `<code style="background:#fef3c7; padding:0.3rem 0.6rem; border-radius:6px; font-size:0.8rem; color:#92400e;">🔒 Hidden — reset with secret code</code>`
+            : `<code style="background:#f3f4f6;padding:0.2rem 0.5rem;border-radius:6px;">${u.password}</code>`;
+          return `<tr>
+            <td>${u.email}</td>
+            <td>${pwdDisplay}</td>
+            <td>${u.role==='admin'?'👑 Admin':'👤 User'}</td>
+            <td>${u.status==='banned'?'🚫 Banned':'✅ Active'}</td>
+            <td>${isAdminUser ? '<i style="color:#9ca3af; font-size:0.8rem;">Use Settings → Reset</i>' :
+              `<button onclick="adminResetUserPassword(${u.id}, '${u.email}')" style="background:#667eea;color:#fff;padding:0.35rem 0.7rem;border:none;border-radius:16px;font-size:0.75rem;font-weight:700;">🔄 Reset</button>`}</td>
+          </tr>`;
+        }).join('');
     }
 
+    // RESETS
     const rl = document.getElementById('resetList');
     if (rl) {
       rl.innerHTML = rD.length === 0 ? '<p style="color:#6b7280;">No reset requests yet.</p>' :
@@ -742,6 +947,7 @@ async function loadAdminData() {
   } catch (err) { console.error(err); }
 }
 
+/* ============ ADMIN ACTIONS ============ */
 async function approveDeposit(id) {
   if (!currentUser || currentUser.role !== 'admin') return;
   const c = document.getElementById(`depositComment-${id}`)?.value.trim();
@@ -759,6 +965,42 @@ async function rejectDeposit(id) {
   if (res.ok) { showToast('❌ Rejected'); loadAdminData(); }
 }
 window.rejectDeposit = rejectDeposit;
+
+async function approveProductRequest(id) {
+  if (!currentUser || currentUser.role !== 'admin') return;
+  const c = document.getElementById(`prodReqComment-${id}`)?.value.trim();
+  if (!c) return showToast('⚠️ Comment required');
+  const res = await fetch(`${API_URL}/product-requests/${id}/approve`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ comment: c }) });
+  if (res.ok) { showToast('✅ Approved'); loadAdminData(); }
+}
+window.approveProductRequest = approveProductRequest;
+
+async function rejectProductRequest(id) {
+  if (!currentUser || currentUser.role !== 'admin') return;
+  const c = document.getElementById(`prodReqComment-${id}`)?.value.trim();
+  if (!c) return showToast('⚠️ Comment required');
+  const res = await fetch(`${API_URL}/product-requests/${id}/reject`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ comment: c }) });
+  if (res.ok) { showToast('❌ Rejected'); loadAdminData(); }
+}
+window.rejectProductRequest = rejectProductRequest;
+
+async function approveOrder(id) {
+  if (!currentUser || currentUser.role !== 'admin') return;
+  const c = document.getElementById(`orderComment-${id}`)?.value.trim();
+  if (!c) return showToast('⚠️ Comment required');
+  const res = await fetch(`${API_URL}/orders/${id}/approve`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ comment: c }) });
+  if (res.ok) { showToast('✅ Approved'); loadAdminData(); }
+}
+window.approveOrder = approveOrder;
+
+async function rejectOrder(id) {
+  if (!currentUser || currentUser.role !== 'admin') return;
+  const c = document.getElementById(`orderComment-${id}`)?.value.trim();
+  if (!c) return showToast('⚠️ Comment required');
+  const res = await fetch(`${API_URL}/orders/${id}/reject`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ comment: c }) });
+  if (res.ok) { showToast('❌ Rejected'); loadAdminData(); }
+}
+window.rejectOrder = rejectOrder;
 
 async function editCoursePrice(id) {
   if (!currentUser || currentUser.role !== 'admin') return;
@@ -807,7 +1049,9 @@ async function adminResetUserPassword(id, email) {
   const np = prompt(`New password for ${email}:`, 'newpass123');
   if (!np || np.length < 6) return;
   const res = await fetch(`${API_URL}/users/${id}/reset-password`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ newPassword: np }) });
+  const data = await res.json();
   if (res.ok) { showToast(`✅ ${email} → ${np}`); loadAdminData(); }
+  else { showToast('❌ ' + data.error); }
 }
 window.adminResetUserPassword = adminResetUserPassword;
 
@@ -828,6 +1072,34 @@ async function dismissReset(id) {
 }
 window.dismissReset = dismissReset;
 
+/* ============ ADMIN: Referral Goal ============ */
+async function loadReferralGoal() {
+  const input = document.getElementById('referralGoalInput');
+  if (!input) return;
+  try {
+    const res = await fetch(`${API_URL}/settings/referral_goal`);
+    const data = await res.json();
+    input.value = data.value || '5';
+  } catch (err) {}
+}
+
+document.getElementById('saveReferralGoalBtn')?.addEventListener('click', async () => {
+  if (!currentUser || currentUser.role !== 'admin') return;
+  const val = document.getElementById('referralGoalInput').value.trim();
+  const status = document.getElementById('referralGoalStatus');
+  if (!val || parseInt(val) < 1) { status.textContent = '❌ Enter number ≥ 1'; status.style.color = '#ef4444'; return; }
+  const res = await fetch(`${API_URL}/settings`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ key: 'referral_goal', value: val })
+  });
+  if (res.ok) {
+    status.textContent = `✅ Goal set to ${val} friends`;
+    status.style.color = '#22c55e';
+    setTimeout(() => status.textContent = '', 3000);
+  }
+});
+
+/* ============ ADMIN SELF RESET ============ */
 document.getElementById('adminResetSelfBtn')?.addEventListener('click', async () => {
   if (!currentUser || currentUser.role !== 'admin') return;
   const np = document.getElementById('adminNewPassword').value.trim();
@@ -837,10 +1109,11 @@ document.getElementById('adminResetSelfBtn')?.addEventListener('click', async ()
   if (!code) { s.textContent = '❌ Enter code'; s.style.color = '#ef4444'; return; }
   const res = await fetch(`${API_URL}/auth/admin-reset`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: currentUser.email, newPassword: np, code }) });
   const d = await res.json();
-  if (res.ok) { s.textContent = '✅ Reset! Notification logged.'; s.style.color = '#22c55e'; document.getElementById('adminNewPassword').value = ''; document.getElementById('adminHiddenCode').value = ''; }
+  if (res.ok) { s.textContent = '✅ Reset!'; s.style.color = '#22c55e'; document.getElementById('adminNewPassword').value = ''; document.getElementById('adminHiddenCode').value = ''; }
   else { s.textContent = '❌ ' + d.error; s.style.color = '#ef4444'; }
 });
 
+/* ============ ADMIN TABS ============ */
 document.querySelectorAll('.admin-tabs button').forEach(btn => {
   btn.addEventListener('click', () => {
     if (!currentUser || currentUser.role !== 'admin') return;
@@ -853,6 +1126,7 @@ document.querySelectorAll('.admin-tabs button').forEach(btn => {
   });
 });
 
+/* ============ NAVIGATION ============ */
 document.querySelectorAll('.nav-menu a').forEach(link => {
   link.addEventListener('click', (e) => {
     e.preventDefault();
@@ -868,6 +1142,7 @@ document.querySelectorAll('.nav-menu a').forEach(link => {
     document.getElementById('navMenu').classList.remove('open');
     history.replaceState(null, '', '#' + page);
     if (page === 'admin') loadAdminData();
+    if (page === 'invite') loadReferrals();
   });
 });
 
