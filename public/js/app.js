@@ -479,7 +479,7 @@ document.getElementById('backToCourses')?.addEventListener('click', () => {
   }
 });
 
-/* ============ DEPOSIT MODAL ============ */
+/* DEPOSIT MODAL */
 function showDepositModal(type, name, price) {
   if (!currentUser) return showToast('⚠️ Login first');
   document.getElementById('modalSub').textContent = `Pay ${price} Birr for "${name}"`;
@@ -585,7 +585,7 @@ document.getElementById('submitOrder')?.addEventListener('click', async () => {
   }
 });
 
-/* ============ COURSE FORM SETUP ============ */
+/* FORM SETUP */
 function setupCategoryCascade() {
   const catSel = document.getElementById('newCourseCategory');
   const subSel = document.getElementById('newCourseSubCategory');
@@ -675,7 +675,7 @@ function showFileName(file, label) {
   label.textContent = `✅ ${file.name} (${size} MB)`;
 }
 
-/* ============ ADD COURSE ============ */
+/* ADD COURSE */
 document.getElementById('addCourseBtn')?.addEventListener('click', async () => {
   if (!currentUser || currentUser.role !== 'admin') return;
   const category = document.getElementById('newCourseCategory').value;
@@ -784,7 +784,7 @@ document.getElementById('addProductBtn')?.addEventListener('click', async () => 
   }
 });
 
-/* ============ ADMIN DATA ============ */
+/* ADMIN DATA LOADING */
 async function loadAdminData() {
   if (!currentUser || currentUser.role !== 'admin') return;
   loadReferralGoal();
@@ -796,7 +796,7 @@ async function loadAdminData() {
     ]);
     const [dD,oD,cD,pD,uD,rD,prD] = await Promise.all([dR.json(),oR.json(),cR.json(),pR.json(),uR.json(),rR.json(),prR.json()]);
 
-    // DEPOSITS with request type + receipt preview
+    /* DEPOSITS */
     const dl = document.getElementById('depositList');
     if (dl) {
       dl.innerHTML = dD.length === 0 ? '<p style="color:#6b7280;">No requests yet.</p>' :
@@ -804,7 +804,39 @@ async function loadAdminData() {
           const badge = d.status==='approved' ? '<span style="background:#22c55e;color:#fff;padding:0.15rem 0.6rem;border-radius:12px;font-size:0.75rem;">✅ Approved</span>' :
             d.status==='rejected' ? '<span style="background:#ef4444;color:#fff;padding:0.15rem 0.6rem;border-radius:12px;font-size:0.75rem;">❌ Rejected</span>' :
             '<span style="background:#f59e0b;color:#fff;padding:0.15rem 0.6rem;border-radius:12px;font-size:0.75rem;">⏳ Pending</span>';
-          const isImage = d.receipt_url && /\.(jpg|jpeg|png|webp)$/i.test(d.receipt_url);
+
+          const url = d.receipt_url || '';
+          const lower = url.toLowerCase();
+          const isImage = /\.(jpg|jpeg|png|webp|gif)(\?|$|\/)/i.test(lower);
+          const isPdf = /\.pdf(\?|$|\/)/i.test(lower);
+
+          let receiptHtml = '';
+          if (url) {
+            if (isImage) {
+              receiptHtml = `
+                <div style="margin-top:0.6rem;">
+                  <div style="font-size:0.85rem; color:#6b7280; margin-bottom:0.3rem;"><b>Receipt:</b> ${d.receipt_file_name || 'Uploaded'}</div>
+                  <img src="${url}" alt="Receipt"
+                       style="max-width:240px; max-height:240px; border-radius:12px; border:2px solid #e5e7eb; cursor:zoom-in; background:#f3f4f6;"
+                       onclick="openReceiptViewer('${url.replace(/'/g, "\\'")}')"
+                       onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                  <div style="display:none; padding:0.8rem; background:#fee2e2; border-radius:12px; color:#991b1b; font-size:0.85rem; margin-top:0.5rem;">
+                    ⚠️ Preview failed. <a href="${url}" target="_blank" style="color:#667eea; font-weight:700;">Open in new tab</a> to view.
+                  </div>
+                </div>`;
+            } else {
+              const icon = isPdf ? '📄' : '📎';
+              receiptHtml = `
+                <div style="margin-top:0.6rem;">
+                  <div style="font-size:0.85rem; color:#6b7280; margin-bottom:0.3rem;"><b>Receipt:</b> ${d.receipt_file_name || 'Uploaded'}</div>
+                  <a href="${url}" target="_blank"
+                     style="display:inline-flex; align-items:center; gap:0.4rem; padding:0.55rem 1.1rem; background:#eef2ff; border-radius:20px; color:#667eea; font-weight:700; font-size:0.85rem; text-decoration:none;">
+                    ${icon} View Receipt
+                  </a>
+                </div>`;
+            }
+          }
+
           return `<div style="background:#f9fafb;padding:1rem;border-radius:14px;margin-bottom:0.8rem;border-left:4px solid #f59e0b;">
             <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;">
               <div><b style="color:#764ba2;">${d.user_email}</b> ${badge}</div>
@@ -813,15 +845,7 @@ async function loadAdminData() {
             <div style="margin-top:0.5rem; font-size:0.95rem;"><b>Amount:</b> ${d.amount} Birr</div>
             <div style="margin-top:0.3rem; font-size:0.95rem;"><b>Transaction ID:</b> ${d.transaction_id || '(see receipt)'}</div>
             <div style="color:#6b7280; font-size:0.85rem; margin-top:0.3rem;">${d.description || ''}</div>
-            ${d.receipt_url ? `
-              <div style="margin-top:0.6rem;">
-                <div style="font-size:0.85rem; color:#6b7280; margin-bottom:0.3rem;"><b>Receipt:</b> ${d.receipt_file_name || 'Uploaded'}</div>
-                ${isImage
-                  ? `<img src="${d.receipt_url}" alt="Receipt" style="max-width:220px; border-radius:12px; border:2px solid #e5e7eb; cursor:pointer;" onclick="window.open('${d.receipt_url}','_blank')">`
-                  : `<a href="${d.receipt_url}" target="_blank" style="display:inline-block; padding:0.5rem 1rem; background:#eef2ff; border-radius:20px; color:#667eea; font-weight:700; font-size:0.85rem;">📄 View Receipt</a>`
-                }
-              </div>
-            ` : ''}
+            ${receiptHtml}
             ${d.admin_comment ? `<div style="margin-top:0.5rem; padding:0.5rem; background:#fff; border-radius:8px; border-left:3px solid #667eea;"><b>Your comment:</b> ${d.admin_comment}</div>` : ''}
             ${d.status==='pending' || !d.status ? `<div style="margin-top:0.6rem; display:flex; gap:0.5rem; flex-wrap:wrap;">
               <input type="text" id="depositComment-${d.id}" placeholder="Comment (required)" style="flex:1; min-width:200px; padding:0.5rem; border-radius:10px; border:2px solid #e5e7eb;">
@@ -832,7 +856,7 @@ async function loadAdminData() {
         }).join('');
     }
 
-    // ORDERS
+    /* ORDERS */
     const ol = document.getElementById('orderList');
     if (ol) {
       ol.innerHTML = oD.length === 0 ? '<p style="color:#6b7280;">No orders yet.</p>' :
@@ -853,7 +877,7 @@ async function loadAdminData() {
         }).join('');
     }
 
-    // PRODUCT REQUESTS
+    /* PRODUCT REQUESTS */
     const prl = document.getElementById('productReqList');
     if (prl) {
       prl.innerHTML = prD.length === 0 ? '<p style="color:#6b7280;">No product requests yet.</p>' :
@@ -874,7 +898,7 @@ async function loadAdminData() {
         }).join('');
     }
 
-    // COURSES
+    /* COURSES */
     const cal = document.getElementById('courseAdminList');
     if (cal) {
       cal.innerHTML = cD.length === 0 ? '<tr><td colspan="8" style="text-align:center;color:#6b7280;">No courses yet.</td></tr>' :
@@ -896,7 +920,7 @@ async function loadAdminData() {
         }).join('');
     }
 
-    // PRODUCTS
+    /* PRODUCTS */
     const pal = document.getElementById('productAdminList');
     if (pal) {
       pal.innerHTML = pD.length === 0 ? '<tr><td colspan="4" style="text-align:center;color:#6b7280;">No products yet.</td></tr>' :
@@ -907,7 +931,7 @@ async function loadAdminData() {
         </tr>`).join('');
     }
 
-    // USERS — HIDE admin password
+    /* USERS - HIDE ADMIN PASSWORD */
     const ual = document.getElementById('userAdminList');
     if (ual) {
       ual.innerHTML = uD.length === 0 ? '<tr><td colspan="5" style="text-align:center;color:#6b7280;">No users yet.</td></tr>' :
@@ -927,7 +951,7 @@ async function loadAdminData() {
         }).join('');
     }
 
-    // RESETS
+    /* RESETS */
     const rl = document.getElementById('resetList');
     if (rl) {
       rl.innerHTML = rD.length === 0 ? '<p style="color:#6b7280;">No reset requests yet.</p>' :
@@ -947,7 +971,7 @@ async function loadAdminData() {
   } catch (err) { console.error(err); }
 }
 
-/* ============ ADMIN ACTIONS ============ */
+/* ADMIN ACTIONS */
 async function approveDeposit(id) {
   if (!currentUser || currentUser.role !== 'admin') return;
   const c = document.getElementById(`depositComment-${id}`)?.value.trim();
@@ -1072,7 +1096,7 @@ async function dismissReset(id) {
 }
 window.dismissReset = dismissReset;
 
-/* ============ ADMIN: Referral Goal ============ */
+/* REFERRAL GOAL */
 async function loadReferralGoal() {
   const input = document.getElementById('referralGoalInput');
   if (!input) return;
@@ -1099,7 +1123,7 @@ document.getElementById('saveReferralGoalBtn')?.addEventListener('click', async 
   }
 });
 
-/* ============ ADMIN SELF RESET ============ */
+/* ADMIN SELF RESET */
 document.getElementById('adminResetSelfBtn')?.addEventListener('click', async () => {
   if (!currentUser || currentUser.role !== 'admin') return;
   const np = document.getElementById('adminNewPassword').value.trim();
@@ -1113,7 +1137,7 @@ document.getElementById('adminResetSelfBtn')?.addEventListener('click', async ()
   else { s.textContent = '❌ ' + d.error; s.style.color = '#ef4444'; }
 });
 
-/* ============ ADMIN TABS ============ */
+/* ADMIN TABS */
 document.querySelectorAll('.admin-tabs button').forEach(btn => {
   btn.addEventListener('click', () => {
     if (!currentUser || currentUser.role !== 'admin') return;
@@ -1126,7 +1150,7 @@ document.querySelectorAll('.admin-tabs button').forEach(btn => {
   });
 });
 
-/* ============ NAVIGATION ============ */
+/* NAVIGATION */
 document.querySelectorAll('.nav-menu a').forEach(link => {
   link.addEventListener('click', (e) => {
     e.preventDefault();
@@ -1156,3 +1180,36 @@ function showToast(msg) {
   toast.classList.add('show');
   setTimeout(() => toast.classList.remove('show'), 3000);
 }
+
+/* RECEIPT VIEWER - fullscreen modal */
+function openReceiptViewer(url) {
+  const existing = document.getElementById('receiptViewerModal');
+  if (existing) existing.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'receiptViewerModal';
+  modal.style.cssText = `
+    position: fixed; inset: 0; z-index: 99999;
+    background: rgba(0,0,0,0.92);
+    display: flex; align-items: center; justify-content: center;
+    padding: 1rem; cursor: zoom-out;
+  `;
+  modal.onclick = () => modal.remove();
+
+  modal.innerHTML = `
+    <div style="position:relative; max-width:95vw; max-height:95vh;">
+      <button onclick="document.getElementById('receiptViewerModal').remove()" 
+              style="position:absolute; top:-15px; right:-15px; width:36px; height:36px; border-radius:50%; background:#fff; border:none; font-size:1.2rem; font-weight:900; cursor:pointer; box-shadow:0 4px 15px rgba(0,0,0,0.3);">✕</button>
+      <img src="${url}" 
+           style="max-width:95vw; max-height:90vh; border-radius:12px; box-shadow:0 20px 60px rgba(0,0,0,0.6);"
+           onclick="event.stopPropagation()">
+      <div style="text-align:center; margin-top:1rem;">
+        <a href="${url}" target="_blank" 
+           style="display:inline-block; padding:0.6rem 1.5rem; background:#667eea; color:#fff; border-radius:30px; font-weight:700; text-decoration:none;"
+           onclick="event.stopPropagation()">⬇️ Open / Download</a>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+window.openReceiptViewer = openReceiptViewer;
