@@ -10,7 +10,7 @@
 
 <div class="animated-bg"><span></span><span></span><span></span><span></span><span></span></div>
 
-<!-- AUTH OVERLAY -->
+<!-- ========== AUTH OVERLAY ========== -->
 <div id="authOverlay">
   <div class="auth-box">
     <img class="auth-hero" src="/learn-at-home.jpg" alt="Learn">
@@ -22,6 +22,11 @@
     <div class="auth-error" id="overlayError"></div>
     <input type="email" id="overlayEmail" placeholder="you@example.com">
     <input type="password" id="overlayPassword" placeholder="Password">
+    <div id="referralField" style="display:none;">
+      <label class="form-label" style="font-size:0.85rem; color:#764ba2; margin-top:0.5rem;">🎁 Referral (optional)</label>
+      <input type="text" id="overlayReferral" placeholder="Referrer email or code" style="border:2px solid #a7f3d0; background:#f0fdf4;">
+      <p id="referralHint" style="font-size:0.75rem; color:#059669; margin-top:0.2rem; display:none;">✅ Invited by a friend — this helps them earn a free course!</p>
+    </div>
     <button class="auth-btn" id="overlayAuthBtn">Login</button>
     <div class="auth-links"><a id="forgotPasswordLink">🔑 Forgot Password?</a></div>
     <div class="toggle-link">
@@ -31,7 +36,7 @@
   </div>
 </div>
 
-<!-- FORGOT PASSWORD MODAL -->
+<!-- ========== FORGOT PASSWORD MODAL ========== -->
 <div class="deposit-modal" id="forgotModal">
   <div class="modal-box">
     <h3>🔑 Reset Password</h3>
@@ -48,7 +53,7 @@
   </div>
 </div>
 
-<!-- DEPOSIT MODAL -->
+<!-- ========== DEPOSIT MODAL ========== -->
 <div class="deposit-modal" id="depositModal">
   <div class="modal-box">
     <h3 style="margin-bottom:0.5rem;">💰 Complete Payment</h3>
@@ -83,7 +88,7 @@
   </div>
 </div>
 
-<!-- HEADER -->
+<!-- ========== HEADER ========== -->
 <header>
   <div class="logo-area">
     <img class="header-logo" src="/logo.jpg" alt="Teshe Tech" onerror="this.style.display='none'">
@@ -107,7 +112,7 @@
 <div class="toast" id="toast"></div>
 
 <main>
-  <!-- HOME -->
+  <!-- ========== HOME ========== -->
   <div id="page-home" class="product-page active">
     <div class="hero-wrap">
       <img class="hero-image" src="/learn-at-home.jpg" alt="Learn At Home">
@@ -140,7 +145,7 @@
     </div>
   </div>
 
-  <!-- CATEGORY -->
+  <!-- ========== CATEGORY VIEW ========== -->
   <div id="page-category" class="course-detail">
     <button class="back-btn" id="backToHome">← Back to Categories</button>
     <div class="course-header">
@@ -150,14 +155,14 @@
     <div id="categoryCoursesGrid"></div>
   </div>
 
-  <!-- COURSE DETAIL -->
+  <!-- ========== COURSE DETAIL ========== -->
   <div id="page-course-detail" class="course-detail">
     <button class="back-btn" id="backToCourses">← Back</button>
     <h2 id="courseDetailTitle"></h2>
     <div class="course-video-grid" id="courseVideoGrid"></div>
   </div>
 
-  <!-- BUY -->
+  <!-- ========== BUY ========== -->
   <div id="page-buy" class="product-page">
     <div class="page-header-wrap">
       <img class="page-header-img" src="/habesha-styles.jpg" alt="Buy Software">
@@ -167,7 +172,7 @@
     <div class="product-grid" id="productGrid"></div>
   </div>
 
-  <!-- ORDER -->
+  <!-- ========== ORDER ========== -->
   <div id="page-order" class="product-page">
     <div class="page-header-wrap">
       <img class="page-header-img" src="/custom-software.jpg" alt="Order Software">
@@ -218,13 +223,18 @@
     </div>
   </div>
 
-  <!-- INVITE -->
+  <!-- ========== INVITE ========== -->
   <div id="page-invite" class="product-page">
     <div class="page-header-wrap">
       <img class="page-header-img" src="/learn-together.jpg" alt="Invite">
       <h2 class="page-header-title">🎁 Invite Friends, Learn Free</h2>
     </div>
-    <p class="page-sub">Invite friends — when enough join, you get a <b>FREE course unlock</b>!</p>
+    <p class="page-sub">
+      Invite friends — when enough of them <b>unlock a course</b>, <b>buy a product</b>, or <b>submit an order</b>, you get a <b>FREE course unlock</b>!
+    </p>
+    <p style="text-align:center; font-size:0.85rem; color:#6b7280; margin-top:-1rem; margin-bottom:1rem;">
+      ⚠️ Only friends who take action (buy, order, or unlock) count toward your goal. Just registering is not enough.
+    </p>
 
     <div class="cv-wrap">
       <div class="admin-box" style="text-align:center;">
@@ -253,7 +263,7 @@
     </div>
   </div>
 
-  <!-- ADMIN -->
+  <!-- ========== ADMIN ========== -->
   <div id="page-admin" class="admin-panel">
     <h2>👑 Admin Panel</h2>
     <div class="admin-tabs">
@@ -267,6 +277,7 @@
       <button data-tab="settings">⚙️ Settings</button>
     </div>
 
+    <!-- COURSES TAB -->
     <div class="admin-tab-content active" id="tab-courses">
       <div class="admin-box">
         <h4 style="color:#667eea; margin-bottom:1rem;">➕ Add New Course</h4>
@@ -366,6 +377,7 @@
       </div>
     </div>
 
+    <!-- PRODUCTS TAB -->
     <div class="admin-tab-content" id="tab-products">
       <div class="admin-box">
         <h4 style="color:#667eea; margin-bottom:0.8rem;">➕ Add Software Product</h4>
@@ -391,10 +403,16 @@
       </div>
     </div>
 
+    <!-- DEPOSITS TAB -->
     <div class="admin-tab-content" id="tab-deposits"><div id="depositList"></div></div>
+
+    <!-- ORDERS TAB -->
     <div class="admin-tab-content" id="tab-orders"><div id="orderList"></div></div>
+
+    <!-- PRODUCT REQUESTS TAB -->
     <div class="admin-tab-content" id="tab-productReqs"><div id="productReqList"></div></div>
 
+    <!-- USERS TAB -->
     <div class="admin-tab-content" id="tab-users">
       <div class="admin-table-wrap">
         <table class="admin-table">
@@ -404,14 +422,16 @@
       </div>
     </div>
 
+    <!-- RESETS TAB -->
     <div class="admin-tab-content" id="tab-resets"><div id="resetList"></div></div>
 
+    <!-- SETTINGS TAB -->
     <div class="admin-tab-content" id="tab-settings">
       <div class="admin-box" style="margin-bottom:1rem;">
         <h4 style="color:#667eea; margin-bottom:0.8rem;">🎁 Referral Settings</h4>
-        <p style="color:#6b7280; margin-bottom:1rem; font-size:0.9rem;">Set how many friends a user needs to invite to earn 1 free course unlock.</p>
+        <p style="color:#6b7280; margin-bottom:1rem; font-size:0.9rem;">Set how many friends a user needs to invite (who then buy, order, or unlock a course) to earn 1 free course unlock.</p>
         <div class="admin-form-group">
-          <label class="form-label" style="margin:0;">Friends needed for 1 free course:</label>
+          <label class="form-label" style="margin:0;">Active friends needed for 1 free course:</label>
           <input type="number" id="referralGoalInput" placeholder="5" min="1" style="width:120px;">
           <button id="saveReferralGoalBtn" style="background:linear-gradient(135deg,#667eea,#764ba2);">💾 Save</button>
         </div>
@@ -431,7 +451,7 @@
     </div>
   </div>
 
-  <!-- ABOUT -->
+  <!-- ========== ABOUT ========== -->
   <div id="page-about" class="product-page">
     <div class="page-header-wrap">
       <img class="page-header-img" src="/fullstack-builders.jpg" alt="About">
@@ -455,7 +475,7 @@
     </div>
   </div>
 
-  <!-- CONTACT -->
+  <!-- ========== CONTACT ========== -->
   <div id="page-contact" class="product-page">
     <div class="page-header-wrap">
       <img class="page-header-img" src="/code-overlay.jpg" alt="Contact">

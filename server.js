@@ -18,17 +18,79 @@ const uploadNote = multer({ storage: multer.memoryStorage(), limits: { fileSize:
 const ADMIN_RESET_CODE = '100510';
 const ADMIN_EMAIL = 'teshomeayenew883@gmail.com';
 
-// ============ AUTH ============
+/* ============ HELPER: Activate Referral ============ */
+async function activateReferral(userEmail) {
+  try {
+    const { data: ref } = await supabase.from('referrals')
+      .select('*').eq('referred_email', userEmail).eq('status', 'pending').maybeSingle();
+    if (!ref) return; // not a referred user, or already active
+
+    await supabase.from('referrals').update({ status: 'active' }).eq('id', ref.id);
+
+    // Count ACTIVE referrals for the referrer
+    const { data: activeRefs } = await supabase.from('referrals')
+      .select('id').eq('referrer_email', ref.referrer_email).eq('status', 'active');
+    const count = activeRefs?.length || 0;
+
+    const { data: goalSetting } = await supabase.from('settings')
+      .select('setting_value').eq('setting_key', 'referral_goal').maybeSingle();
+    const goal = parseInt(goalSetting?.setting_value || '5');
+
+    if (count >= goal) {
+      // Award credit
+      const { data: credit } = await supabase.from('free_credits')
+        .select('*').eq('user_email', ref.referrer_email).maybeSingle();
+      if (credit) {
+        await supabase.from('free_credits')
+          .update({ credits: credit.credits + 1, updated_at: new Date().toISOString() }).eq('id', credit.id);
+      } else {
+        await supabase.from('free_credits')
+          .insert([{ user_email: ref.referrer_email, credits: 1 }]);
+      }
+      // Reset — delete only active ones so pending stay
+      await supabase.from('referrals')
+        .delete().eq('referrer_email', ref.referrer_email).eq('status', 'active');
+    }
+  } catch (err) { console.error('Activate referral error:', err); }
+}
+
+/* ============ AUTH ============ */
 app.post('/api/auth/register', async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, referralCode } = req.body;
   if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
-  const referralCode = 'REF-' + email.split('@')[0].toUpperCase() + '-' + Math.random().toString(36).substring(2, 6).toUpperCase();
+  const myReferralCode = 'REF-' + email.split('@')[0].toUpperCase() + '-' + Math.random().toString(36).substring(2, 6).toUpperCase();
   try {
     const { data: existing } = await supabase.from('users').select('id').eq('email', email).maybeSingle();
     if (existing) return res.status(400).json({ error: 'Account already exists' });
+
     const { data, error } = await supabase.from('users')
-      .insert([{ email, password, referral_code: referralCode, role: 'user', status: 'active' }]).select();
+      .insert([{ email, password, referral_code: myReferralCode, role: 'user', status: 'active' }]).select();
     if (error) throw error;
+
+    // Handle referral (creates a PENDING referral — activates later)
+    if (referralCode) {
+      let referrerEmail = null;
+      if (referralCode.includes('@')) {
+        referrerEmail = referralCode;
+      } else {
+        const { data: referrer } = await supabase.from('users')
+          .select('email').eq('referral_code', referralCode).maybeSingle();
+        if (referrer) referrerEmail = referrer.email;
+      }
+
+      if (referrerEmail && referrerEmail !== email) {
+        const { data: already } = await supabase.from('referrals')
+          .select('id').eq('referred_email', email).maybeSingle();
+        if (!already) {
+          await supabase.from('referrals').insert([{
+            referrer_email: referrerEmail,
+            referred_email: email,
+            status: 'pending'
+          }]);
+        }
+      }
+    }
+
     res.status(201).json({ message: 'Registered', user: data[0] });
   } catch (err) { res.status(400).json({ error: err.message }); }
 });
@@ -57,7 +119,7 @@ app.post('/api/auth/admin-reset', async (req, res) => {
   res.json({ message: '✅ Admin password reset.' });
 });
 
-// ============ PASSWORD RESET ============
+/* ============ PASSWORD RESET ============ */
 app.post('/api/password-reset/request', async (req, res) => {
   const { email, reason } = req.body;
   if (!email) return res.status(400).json({ error: 'Email required' });
@@ -93,7 +155,7 @@ app.delete('/api/password-reset/:id', async (req, res) => {
   res.json({ message: 'Dismissed' });
 });
 
-// ============ FILE UPLOADS ============
+/* ============ FILE UPLOADS ============ */
 app.post('/api/upload-video', upload.single('video'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No video uploaded' });
   try {
@@ -133,7 +195,7 @@ app.post('/api/upload-receipt', uploadNote.single('receipt'), async (req, res) =
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// ============ COURSES ============
+/* ============ COURSES ============ */
 app.get('/api/courses', async (req, res) => {
   const { data, error } = await supabase.from('courses').select('*').order('id');
   if (error) return res.status(500).json({ error: error.message });
@@ -195,7 +257,7 @@ app.get('/api/user-access/:email', async (req, res) => {
   res.json(data);
 });
 
-// ============ PRODUCTS ============
+/* ============ PRODUCTS ============ */
 app.get('/api/products', async (req, res) => {
   const { data, error } = await supabase.from('products').select('*').order('id');
   if (error) return res.status(500).json({ error: error.message });
@@ -219,11 +281,15 @@ app.delete('/api/products/:id', async (req, res) => {
   res.json({ message: 'Deleted' });
 });
 
-// ============ PRODUCT REQUESTS ============
+/* ============ PRODUCT REQUESTS ============ */
 app.post('/api/product-requests', async (req, res) => {
   const { product_id, product_name, user_email, user_name, message } = req.body;
   const { data, error } = await supabase.from('product_requests').insert([{ product_id, product_name, user_email, user_name, message }]).select();
   if (error) return res.status(500).json({ error: error.message });
+
+  // ✅ Activate referral (a buy request counts as activity)
+  if (user_email) await activateReferral(user_email);
+
   res.json(data[0]);
 });
 
@@ -255,19 +321,43 @@ app.post('/api/product-requests/:id/reject', async (req, res) => {
   res.json(data[0]);
 });
 
-// ============ DEPOSITS ============
+/* ============ DEPOSITS ============ */
 app.post('/api/deposits', async (req, res) => {
   const { email, amount, transactionId, description, request_type, receipt_url, receipt_file_name } = req.body;
-  const { data, error } = await supabase.from('deposits').insert([{
-    user_email: email, amount,
-    transaction_id: transactionId || 'See receipt',
-    description,
-    request_type: request_type || 'Course Unlock',
-    receipt_url: receipt_url || null,
-    receipt_file_name: receipt_file_name || null
-  }]).select();
-  if (error) return res.status(500).json({ error: error.message });
-  res.json(data[0]);
+
+  if (!email || !amount) return res.status(400).json({ error: 'Email and amount required' });
+  if (!transactionId && !receipt_url) {
+    return res.status(400).json({ error: 'Provide transaction ID or receipt' });
+  }
+
+  try {
+    // Check for duplicate transaction ID
+    if (transactionId && transactionId !== 'See receipt') {
+      const { data: existing } = await supabase.from('deposits')
+        .select('id').eq('transaction_id', transactionId).maybeSingle();
+      if (existing) {
+        return res.status(400).json({ error: '❌ This transaction ID was already submitted. Please use a unique TXN for each payment.' });
+      }
+    }
+
+    const { data, error } = await supabase.from('deposits').insert([{
+      user_email: email, amount,
+      transaction_id: transactionId || 'See receipt',
+      description,
+      request_type: request_type || 'Course Unlock',
+      receipt_url: receipt_url || null,
+      receipt_file_name: receipt_file_name || null
+    }]).select();
+    if (error) {
+      if (error.code === '23505') {
+        return res.status(400).json({ error: '❌ Duplicate transaction ID' });
+      }
+      throw error;
+    }
+    res.json(data[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 app.get('/api/deposits', async (req, res) => {
@@ -280,10 +370,17 @@ app.post('/api/deposits/:id/approve', async (req, res) => {
   const { id } = req.params;
   const { comment } = req.body;
   if (!comment || comment.trim() === '') return res.status(400).json({ error: 'Comment required' });
+
   const { data, error } = await supabase.from('deposits').update({
-    status: 'approved', admin_comment: comment, reviewed_at: new Date().toISOString(), reviewed_by: ADMIN_EMAIL
+    status: 'approved', admin_comment: comment,
+    reviewed_at: new Date().toISOString(), reviewed_by: ADMIN_EMAIL
   }).eq('id', id).select();
   if (error) return res.status(500).json({ error: error.message });
+
+  // ✅ Activate referral when deposit is approved
+  const userEmail = data[0]?.user_email;
+  if (userEmail) await activateReferral(userEmail);
+
   res.json(data[0]);
 });
 
@@ -298,11 +395,16 @@ app.post('/api/deposits/:id/reject', async (req, res) => {
   res.json(data[0]);
 });
 
-// ============ ORDERS ============
+/* ============ ORDERS ============ */
 app.post('/api/orders', async (req, res) => {
   const { email, name, description } = req.body;
-  const { data, error } = await supabase.from('orders').insert([{ user_email: email, name, description }]).select();
+  const { data, error } = await supabase.from('orders')
+    .insert([{ user_email: email, name, description }]).select();
   if (error) return res.status(500).json({ error: error.message });
+
+  // ✅ Activate referral when order is submitted
+  if (email) await activateReferral(email);
+
   res.json(data[0]);
 });
 
@@ -334,7 +436,7 @@ app.post('/api/orders/:id/reject', async (req, res) => {
   res.json(data[0]);
 });
 
-// ============ SETTINGS ============
+/* ============ SETTINGS ============ */
 app.get('/api/settings/:key', async (req, res) => {
   const { data } = await supabase.from('settings').select('setting_value').eq('setting_key', req.params.key).maybeSingle();
   res.json({ value: data?.setting_value || null });
@@ -360,7 +462,7 @@ app.post('/api/settings', async (req, res) => {
   res.json({ message: 'Saved' });
 });
 
-// ============ REFERRALS ============
+/* ============ REFERRALS ============ */
 app.post('/api/referrals', async (req, res) => {
   const { referrer_email, referred_email } = req.body;
   if (!referrer_email || !referred_email) return res.status(400).json({ error: 'Missing emails' });
@@ -369,34 +471,30 @@ app.post('/api/referrals', async (req, res) => {
   const { data: existing } = await supabase.from('referrals').select('id').eq('referred_email', referred_email).maybeSingle();
   if (existing) return res.json({ message: 'Already referred', alreadyReferred: true });
 
-  await supabase.from('referrals').insert([{ referrer_email, referred_email }]);
+  await supabase.from('referrals').insert([{
+    referrer_email, referred_email, status: 'pending'
+  }]);
 
-  const { data: allRefs } = await supabase.from('referrals').select('id').eq('referrer_email', referrer_email);
-  const count = allRefs?.length || 0;
-
-  const { data: goalSetting } = await supabase.from('settings').select('setting_value').eq('setting_key', 'referral_goal').maybeSingle();
-  const goal = parseInt(goalSetting?.setting_value || '5');
-
-  let awarded = false;
-  if (count >= goal) {
-    const { data: credit } = await supabase.from('free_credits').select('*').eq('user_email', referrer_email).maybeSingle();
-    if (credit) {
-      await supabase.from('free_credits').update({ credits: credit.credits + 1, updated_at: new Date().toISOString() }).eq('id', credit.id);
-    } else {
-      await supabase.from('free_credits').insert([{ user_email: referrer_email, credits: 1 }]);
-    }
-    awarded = true;
-    await supabase.from('referrals').delete().eq('referrer_email', referrer_email);
-  }
-
-  res.json({ message: 'Referral recorded', count, goal, awarded });
+  res.json({ message: 'Referral recorded — friend needs to activate to count!' });
 });
 
 app.get('/api/referrals/:email', async (req, res) => {
-  const { data, error } = await supabase.from('referrals').select('*').eq('referrer_email', req.params.email).order('created_at', { ascending: false });
+  const { data, error } = await supabase.from('referrals')
+    .select('*').eq('referrer_email', req.params.email).order('created_at', { ascending: false });
   if (error) return res.status(500).json({ error: error.message });
-  const { data: credits } = await supabase.from('free_credits').select('credits').eq('user_email', req.params.email).maybeSingle();
-  res.json({ referrals: data || [], count: data?.length || 0, credits: credits?.credits || 0 });
+  const { data: credits } = await supabase.from('free_credits')
+    .select('credits').eq('user_email', req.params.email).maybeSingle();
+
+  const activeCount = (data || []).filter(r => r.status === 'active').length;
+  const pendingCount = (data || []).filter(r => r.status === 'pending').length;
+
+  res.json({
+    referrals: data || [],
+    count: activeCount,
+    activeCount,
+    pendingCount,
+    credits: credits?.credits || 0
+  });
 });
 
 app.post('/api/free-credits/use', async (req, res) => {
@@ -413,11 +511,10 @@ app.get('/api/free-credits/:email', async (req, res) => {
   res.json({ credits: data?.credits || 0 });
 });
 
-// ============ USERS ============
+/* ============ USERS ============ */
 app.get('/api/users', async (req, res) => {
   const { data, error } = await supabase.from('users').select('id, email, password, role, status, referral_code');
   if (error) return res.status(500).json({ error: error.message });
-  // Hide admin password from response
   const safeData = data.map(u => {
     if (u.role === 'admin') return { ...u, password: '🔒 Hidden' };
     return u;
