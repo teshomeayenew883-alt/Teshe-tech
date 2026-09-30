@@ -4,7 +4,11 @@ let courses = [];
 let products = [];
 let userAccess = {};
 let isLoginMode = true;
-const API_URL = 'http://localhost:5000/api';
+
+// Auto-detect API URL — works locally AND on Render
+const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+  ? 'http://localhost:5000/api'
+  : window.location.origin + '/api';
 
 const CATEGORIES = {
   'fullstack': { label: '💻 Full-Stack Development', subs: ['HTML','CSS','JavaScript','TypeScript','React','Vue','Angular','Node.js','Express','MongoDB','PostgreSQL','REST API','GraphQL'] },
@@ -329,7 +333,8 @@ async function openCourse(courseName) {
     }
   } else if (course.format === 'video' && course.video_url) {
     let embedUrl = course.video_url;
-    if (embedUrl.startsWith('/uploads/')) {
+    if (embedUrl.startsWith('http') && (embedUrl.includes('supabase') || embedUrl.includes('/uploads/'))) {
+      // Supabase or local video — use <video> tag
       html += `<div class="course-video-item" style="max-width:100%;"><video controls style="width:100%; border-radius:12px; background:#000;"><source src="${embedUrl}" type="video/mp4"></video><h4>${course.name}</h4></div>`;
       if (course.type === 'free' || course.type === 'sample') {
         html += `<div style="width:100%; text-align:center; margin-top:1rem;"><a href="${embedUrl}" download class="download-btn">⬇️ Download Video</a></div>`;
@@ -337,6 +342,7 @@ async function openCourse(courseName) {
         html += `<div style="width:100%; text-align:center; margin-top:1rem; color:#9ca3af; font-size:0.9rem;">🔒 Download disabled</div>`;
       }
     } else {
+      // YouTube
       if (embedUrl.includes('watch?v=')) { const id = embedUrl.split('v=')[1]?.split('&')[0]; if (id) embedUrl = 'https://www.youtube.com/embed/' + id; }
       else if (embedUrl.includes('youtu.be/')) { const id = embedUrl.split('youtu.be/')[1]?.split('?')[0]; if (id) embedUrl = 'https://www.youtube.com/embed/' + id; }
       html += `<div class="course-video-item" style="max-width:100%;"><iframe src="${embedUrl}" allowfullscreen></iframe><h4>${course.name}</h4></div>`;
