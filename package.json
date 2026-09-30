@@ -1,13 +1,14 @@
 {
   "name": "teshe-tech-fullstack",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Teshe Tech full-stack app",
+  "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node server.js",
+    "dev": "node server.js"
   },
   "keywords": [],
-  "author": "",
+  "author": "Teshome Ayenew",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
@@ -16,5 +17,8 @@
     "dotenv": "^18.0.4",
     "express": "^5.2.1",
     "multer": "^2.4.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
